@@ -34,11 +34,11 @@ const Register = () => {
         <Card className="w-full max-w-md fade-in-up shadow-2xl">
           <CardHeader className="space-y-4 text-center">
             <div className="flex justify-center mb-4">
-              <img src={logo} alt="CityZen Logo" className="h-16 w-16" />
+              <img src={logo} alt="Cittilenz Logo" className="h-16 w-16" />
             </div>
-            <CardTitle className="text-3xl font-bold">Create Account</CardTitle>
+            <CardTitle className="text-3xl font-bold font-marcellus">Create Account</CardTitle>
             <CardDescription className="text-base">
-              Join CityZen and start making a difference in your community
+              Join Cittilenz and start making a difference in your community
             </CardDescription>
           </CardHeader>
           

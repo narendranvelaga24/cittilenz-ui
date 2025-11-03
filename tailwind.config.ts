@@ -14,6 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
+        marcellus: ['Marcellus', 'serif'],
         poppins: ['Poppins', 'sans-serif'],
       },
       colors: {

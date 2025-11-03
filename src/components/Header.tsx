@@ -45,8 +45,8 @@ const Header = () => {
               alt="CityZen Logo"
               className="h-12 w-12 transition-transform duration-300 group-hover:scale-110"
             />
-            <span className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              CityZen
+            <span className="text-2xl font-bold font-marcellus text-foreground">
+              Cittilenz
             </span>
           </Link>
 
@@ -56,27 +56,27 @@ const Header = () => {
                 <button
                   key={item.id}
                   onClick={() => scrollToSection(item.id)}
-                  className="text-foreground/80 hover:text-secondary font-medium transition-colors duration-300 relative group"
+                  className="text-foreground/80 hover:text-foreground font-medium transition-colors duration-300 relative group"
                 >
                   {item.name}
-                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-secondary transition-all duration-300 group-hover:w-full" />
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-foreground transition-all duration-300 group-hover:w-full" />
                 </button>
               ))}
             </div>
           ) : (
-            <Link to="/">
+            <Link to="/" className="hidden md:block">
               <Button variant="ghost">Back to Home</Button>
             </Link>
           )}
 
           <div className="flex items-center space-x-4">
             <Link to="/login">
-              <Button variant="ghost" className="font-medium">
+              <Button variant="ghost" className="font-medium hover:scale-105 transition-transform">
                 Login
               </Button>
             </Link>
             <Link to="/register">
-              <Button className="bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity font-medium">
+              <Button className="bg-primary text-primary-foreground hover:bg-primary/90 hover:scale-105 transition-all font-medium">
                 Get Started
               </Button>
             </Link>

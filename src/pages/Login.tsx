@@ -25,7 +25,7 @@ const Login = () => {
         <Card className="w-full max-w-md fade-in-up shadow-2xl">
           <CardHeader className="space-y-4 text-center">
             <div className="flex justify-center mb-4">
-              <img src={logo} alt="CityZen Logo" className="h-16 w-16" />
+              <img src={logo} alt="Cittilenz Logo" className="h-16 w-16" />
             </div>
             <CardTitle className="text-3xl font-bold">Welcome Back</CardTitle>
             <CardDescription className="text-base">
