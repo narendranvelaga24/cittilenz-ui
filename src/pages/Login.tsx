@@ -1,20 +1,49 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import logo from "@/assets/cittilenz-logo.jpeg";
 import Header from "@/components/Header";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Login logic will be implemented later
-    console.log("Login:", { email, password });
+    
+    const success = login(email, password);
+    if (success) {
+      toast({
+        title: "Login successful!",
+        description: "Redirecting to your dashboard...",
+      });
+      
+      // Get user role and redirect accordingly
+      const credentials = {
+        "citizen@gmail.com": "citizen",
+        "official@gmail.com": "official",
+        "admin@gmail.com": "admin",
+      };
+      const role = credentials[email as keyof typeof credentials];
+      
+      setTimeout(() => {
+        navigate(`/${role}-dashboard`);
+      }, 500);
+    } else {
+      toast({
+        title: "Login failed",
+        description: "Invalid email or password",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
