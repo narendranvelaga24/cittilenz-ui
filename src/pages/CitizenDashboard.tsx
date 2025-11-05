@@ -11,6 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Bell, MapPin, Upload, Award, LogOut, Home, FileText, User } from "lucide-react";
 import logo from "@/assets/cittilenz-logo.jpeg";
+import potholeImg from "@/assets/pothole.jpg";
+import streetlightImg from "@/assets/streetlight.jpg";
+import garbageImg from "@/assets/garbage.jpg";
 
 const CitizenDashboard = () => {
   const { user, logout } = useAuth();
@@ -23,9 +26,9 @@ const CitizenDashboard = () => {
   };
 
   const mockIssues = [
-    { id: 1, title: "Pothole on Main Street", status: "In Progress", date: "2025-11-01", image: "/placeholder.svg" },
-    { id: 2, title: "Broken Streetlight", status: "Pending", date: "2025-11-03", image: "/placeholder.svg" },
-    { id: 3, title: "Garbage Not Collected", status: "Resolved", date: "2025-10-28", image: "/placeholder.svg" },
+    { id: 1, title: "Pothole on Main Street", status: "In Progress", date: "2025-11-01", image: potholeImg },
+    { id: 2, title: "Broken Streetlight", status: "Pending", date: "2025-11-03", image: streetlightImg },
+    { id: 3, title: "Garbage Not Collected", status: "Resolved", date: "2025-10-28", image: garbageImg },
   ];
 
   const getStatusColor = (status: string) => {

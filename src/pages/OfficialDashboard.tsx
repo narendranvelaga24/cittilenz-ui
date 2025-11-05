@@ -9,6 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Bell, BarChart3, Map, LogOut, Home, FileText, User, Search, Filter } from "lucide-react";
 import logo from "@/assets/cittilenz-logo.jpeg";
+import potholeImg from "@/assets/pothole.jpg";
+import streetlightImg from "@/assets/streetlight.jpg";
+import garbageImg from "@/assets/garbage.jpg";
+import waterleakImg from "@/assets/waterleak.jpg";
 
 const OfficialDashboard = () => {
   const { user, logout } = useAuth();
