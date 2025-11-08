@@ -1,4 +1,4 @@
-import { Home, FileText, Bell, User, Map, Award, Settings } from "lucide-react";
+import { Home, FileText, Bell, User, Map, Award, Settings, HelpCircle } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
@@ -18,10 +18,9 @@ const menuItems = [
   { title: "Home", url: "/citizen-dashboard", icon: Home },
   { title: "My Issues", url: "/citizen-dashboard/issues", icon: FileText },
   { title: "Map View", url: "/citizen-dashboard/map", icon: Map },
-  { title: "Achievements", url: "/citizen-dashboard/achievements", icon: Award },
   { title: "Notifications", url: "/citizen-dashboard/notifications", icon: Bell },
   { title: "Profile", url: "/citizen-dashboard/profile", icon: User },
-  { title: "Settings", url: "/citizen-dashboard/settings", icon: Settings },
+  { title: "Help", url: "/citizen-dashboard/help", icon: HelpCircle },
 ];
 
 export const CitizenSidebar = () => {
