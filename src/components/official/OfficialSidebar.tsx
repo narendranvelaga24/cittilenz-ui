@@ -17,13 +17,10 @@ import logo from "@/assets/cittilenz-logo.jpeg";
 const menuItems = [
   { title: "Dashboard", url: "/official-dashboard", icon: Home },
   { title: "Issues", url: "/official-dashboard/issues", icon: ClipboardList },
-  { title: "Work Orders", url: "/official-dashboard/workorders", icon: Truck },
-  { title: "Map View", url: "/official-dashboard/map", icon: Map },
-  { title: "Analytics", url: "/official-dashboard/analytics", icon: BarChart3 },
-  { title: "Field Teams", url: "/official-dashboard/teams", icon: Users },
-  { title: "Inventory", url: "/official-dashboard/inventory", icon: Package },
+  { title: "Map Analytics", url: "/official-dashboard/map", icon: Map },
+  { title: "Performance", url: "/official-dashboard/performance", icon: BarChart3 },
   { title: "Notifications", url: "/official-dashboard/notifications", icon: Bell },
-  { title: "Settings", url: "/official-dashboard/settings", icon: Settings },
+  { title: "Profile", url: "/official-dashboard/profile", icon: Settings },
 ];
 
 export const OfficialSidebar = () => {
