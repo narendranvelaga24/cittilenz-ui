@@ -17,11 +17,11 @@ import logo from "@/assets/cittilenz-logo.jpeg";
 const menuItems = [
   { title: "Dashboard", url: "/admin-dashboard", icon: Home },
   { title: "User Management", url: "/admin-dashboard/users", icon: Users },
-  { title: "Role & Permissions", url: "/admin-dashboard/roles", icon: Shield },
+  { title: "Issue Oversight", url: "/admin-dashboard/issues", icon: FileText },
+  { title: "Departments & Zones", url: "/admin-dashboard/departments", icon: Database },
+  { title: "Analytics & Reports", url: "/admin-dashboard/analytics", icon: Shield },
   { title: "Audit Logs", url: "/admin-dashboard/audit", icon: FileText },
-  { title: "Workflow Editor", url: "/admin-dashboard/workflows", icon: Wrench },
-  { title: "AI Training", url: "/admin-dashboard/ai", icon: Zap },
-  { title: "Data Export", url: "/admin-dashboard/export", icon: Database },
+  { title: "AI & Automation", url: "/admin-dashboard/ai", icon: Zap },
   { title: "System Settings", url: "/admin-dashboard/settings", icon: Settings },
 ];
 
