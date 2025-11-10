@@ -1,10 +1,12 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { OfficialSidebar } from "@/components/official/OfficialSidebar";
-import { Bell, User, LogOut } from "lucide-react";
+import { Bell, User, LogOut, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 import DashboardHome from "./official/DashboardHome";
 import Issues from "./official/Issues";
 import IssueDetail from "./official/IssueDetail";
@@ -16,6 +18,7 @@ import Profile from "./official/Profile";
 const OfficialDashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const handleLogout = () => {
     logout();
@@ -25,23 +28,44 @@ const OfficialDashboard = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
-        <OfficialSidebar />
+        {/* Desktop Sidebar */}
+        <div className="hidden md:block">
+          <OfficialSidebar />
+        </div>
+
         <div className="flex-1 flex flex-col">
           {/* Top Header */}
-          <header className="h-16 border-b bg-card flex items-center justify-between px-6 sticky top-0 z-10">
-            <div className="flex items-center gap-4">
-              <SidebarTrigger />
-              <h1 className="text-xl font-marcellus font-semibold text-foreground">Official Portal</h1>
+          <header className="h-14 md:h-16 border-b bg-card flex items-center justify-between px-4 md:px-6 sticky top-0 z-10">
+            <div className="flex items-center gap-2 md:gap-4">
+              {isMobile ? (
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <Menu className="h-5 w-5" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="left" className="p-0 w-64">
+                    <OfficialSidebar />
+                  </SheetContent>
+                </Sheet>
+              ) : (
+                <SidebarTrigger />
+              )}
+              <h1 className="text-base md:text-xl font-marcellus font-semibold text-foreground">
+                {isMobile ? "Portal" : "Official Portal"}
+              </h1>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 md:gap-3">
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-5 w-5" />
                 <span className="absolute top-1 right-1 h-2 w-2 bg-destructive rounded-full" />
               </Button>
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted">
-                <User className="h-4 w-4" />
-                <span className="text-sm font-medium">{user?.email}</span>
-              </div>
+              {!isMobile && (
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted">
+                  <User className="h-4 w-4" />
+                  <span className="text-sm font-medium">{user?.email}</span>
+                </div>
+              )}
               <Button variant="ghost" size="icon" onClick={handleLogout}>
                 <LogOut className="h-5 w-5" />
               </Button>
