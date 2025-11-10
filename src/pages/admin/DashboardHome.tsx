@@ -3,64 +3,64 @@ import { Users, FileText, Shield, TrendingUp } from "lucide-react";
 
 const DashboardHome = () => {
   return (
-    <div className="space-y-8 animate-fade-in">
-      <div className="flex items-center gap-3">
-        <Shield className="w-10 h-10 text-primary" />
+    <div className="space-y-6 md:space-y-8 animate-fade-in">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+        <Shield className="w-8 h-8 md:w-10 md:h-10 text-primary" />
         <div>
-          <h1 className="text-4xl md:text-5xl font-marcellus font-bold">Admin Dashboard</h1>
-          <p className="text-muted-foreground text-lg">System-wide management and oversight</p>
+          <h1 className="text-2xl md:text-4xl lg:text-5xl font-marcellus font-bold">Admin Dashboard</h1>
+          <p className="text-sm md:text-base lg:text-lg text-muted-foreground">System-wide management and oversight</p>
         </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
         <Card className="hover-scale">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Users className="w-4 h-4" /> Total Users
+          <CardHeader className="pb-2 md:pb-3">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <Users className="w-3 h-3 md:w-4 md:h-4" /> Users
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-4xl font-bold">1,245</p>
-            <p className="text-sm text-success mt-2">↑ 8% this month</p>
+            <p className="text-2xl md:text-3xl lg:text-4xl font-bold">1,245</p>
+            <p className="text-xs md:text-sm text-success mt-1 md:mt-2">↑ 8% this month</p>
           </CardContent>
         </Card>
         <Card className="hover-scale">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <FileText className="w-4 h-4" /> Total Issues
+          <CardHeader className="pb-2 md:pb-3">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground flex items-center gap-2">
+              <FileText className="w-3 h-3 md:w-4 md:h-4" /> Issues
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-4xl font-bold">3,567</p>
-            <p className="text-sm text-success mt-2">↑ 12% this month</p>
+            <p className="text-2xl md:text-3xl lg:text-4xl font-bold">3,567</p>
+            <p className="text-xs md:text-sm text-success mt-1 md:mt-2">↑ 12% this month</p>
           </CardContent>
         </Card>
         <Card className="hover-scale">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Active Officials</CardTitle>
+          <CardHeader className="pb-2 md:pb-3">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">Officials</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-4xl font-bold">45</p>
-            <p className="text-sm text-muted-foreground mt-2">Managing zones</p>
+            <p className="text-2xl md:text-3xl lg:text-4xl font-bold">45</p>
+            <p className="text-xs md:text-sm text-muted-foreground mt-1 md:mt-2">Managing zones</p>
           </CardContent>
         </Card>
         <Card className="hover-scale">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Resolution Rate</CardTitle>
+          <CardHeader className="pb-2 md:pb-3">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">Resolution</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-4xl font-bold">82%</p>
-            <p className="text-sm text-success mt-2">↑ 3% from last month</p>
+            <p className="text-2xl md:text-3xl lg:text-4xl font-bold">82%</p>
+            <p className="text-xs md:text-sm text-success mt-1 md:mt-2">↑ 3% from last</p>
           </CardContent>
         </Card>
       </div>
 
       {/* System Health & Activity */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl font-marcellus">System Health</CardTitle>
+            <CardTitle className="text-lg md:text-xl lg:text-2xl font-marcellus">System Health</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -95,7 +95,7 @@ const DashboardHome = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl font-marcellus">Recent Activity</CardTitle>
+            <CardTitle className="text-lg md:text-xl lg:text-2xl font-marcellus">Recent Activity</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg hover-scale">

@@ -15,52 +15,52 @@ const DashboardHome = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="p-6 space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-6 hover-lift cursor-pointer transition-all">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        <Card className="p-4 md:p-6 hover-lift cursor-pointer transition-all">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Total Issues</p>
-              <h3 className="text-3xl font-bold text-foreground mt-1">247</h3>
+              <p className="text-xs md:text-sm text-muted-foreground">Total Issues</p>
+              <h3 className="text-2xl md:text-3xl font-bold text-foreground mt-1">247</h3>
               <p className="text-xs text-success mt-1 flex items-center gap-1">
-                <TrendingUp className="h-3 w-3" /> +12% this week
+                <TrendingUp className="h-3 w-3" /> +12%
               </p>
             </div>
-            <ClipboardList className="h-12 w-12 text-primary opacity-20" />
+            <ClipboardList className="h-8 w-8 md:h-12 md:w-12 text-primary opacity-20" />
           </div>
         </Card>
 
-        <Card className="p-6 hover-lift cursor-pointer transition-all">
+        <Card className="p-4 md:p-6 hover-lift cursor-pointer transition-all">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Pending</p>
-              <h3 className="text-3xl font-bold text-warning mt-1">42</h3>
-              <p className="text-xs text-muted-foreground mt-1">Needs assignment</p>
+              <p className="text-xs md:text-sm text-muted-foreground">Pending</p>
+              <h3 className="text-2xl md:text-3xl font-bold text-warning mt-1">42</h3>
+              <p className="text-xs text-muted-foreground mt-1">Needs assign</p>
             </div>
-            <Clock className="h-12 w-12 text-warning opacity-20" />
+            <Clock className="h-8 w-8 md:h-12 md:w-12 text-warning opacity-20" />
           </div>
         </Card>
 
-        <Card className="p-6 hover-lift cursor-pointer transition-all">
+        <Card className="p-4 md:p-6 hover-lift cursor-pointer transition-all">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">In Progress</p>
-              <h3 className="text-3xl font-bold text-info mt-1">89</h3>
+              <p className="text-xs md:text-sm text-muted-foreground">In Progress</p>
+              <h3 className="text-2xl md:text-3xl font-bold text-info mt-1">89</h3>
               <p className="text-xs text-muted-foreground mt-1">Being resolved</p>
             </div>
-            <Users className="h-12 w-12 text-info opacity-20" />
+            <Users className="h-8 w-8 md:h-12 md:w-12 text-info opacity-20" />
           </div>
         </Card>
 
-        <Card className="p-6 hover-lift cursor-pointer transition-all">
+        <Card className="p-4 md:p-6 hover-lift cursor-pointer transition-all">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Resolved</p>
-              <h3 className="text-3xl font-bold text-success mt-1">116</h3>
-              <p className="text-xs text-success mt-1">87% within SLA</p>
+              <p className="text-xs md:text-sm text-muted-foreground">Resolved</p>
+              <h3 className="text-2xl md:text-3xl font-bold text-success mt-1">116</h3>
+              <p className="text-xs text-success mt-1">87% SLA</p>
             </div>
-            <CheckCircle className="h-12 w-12 text-success opacity-20" />
+            <CheckCircle className="h-8 w-8 md:h-12 md:w-12 text-success opacity-20" />
           </div>
         </Card>
       </div>
@@ -144,51 +144,53 @@ const DashboardHome = () => {
       </div>
 
       {/* Recent Issues Table */}
-      <Card className="p-6">
+      <Card className="p-4 md:p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Recent Issues</h2>
-          <Button variant="ghost" size="sm" onClick={() => navigate("/official-dashboard/issues")}>
+          <h2 className="text-base md:text-lg font-semibold">Recent Issues</h2>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/official-dashboard/issues")} className="text-xs md:text-sm">
             View All →
           </Button>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Issue</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Category</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Zone</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Reporter</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Status</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {mockIssues.map(issue => (
-                <tr key={issue.id} className="border-b hover:bg-muted/50 transition-colors">
-                  <td className="py-3 px-4">
-                    <div className="font-medium text-sm">{issue.title}</div>
-                    <div className="text-xs text-muted-foreground">{issue.date}</div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <Badge variant="outline" className="text-xs">{issue.category}</Badge>
-                  </td>
-                  <td className="py-3 px-4 text-sm">{issue.zone}</td>
-                  <td className="py-3 px-4 text-sm">{issue.citizen}</td>
-                  <td className="py-3 px-4">
-                    <Badge variant={issue.status === "pending" ? "secondary" : issue.status === "urgent" ? "destructive" : "default"} className="text-xs">
-                      {issue.status}
-                    </Badge>
-                  </td>
-                  <td className="py-3 px-4">
-                    <Button size="sm" variant="ghost" onClick={() => navigate(`/official-dashboard/issues/${issue.id}`)}>
-                      View
-                    </Button>
-                  </td>
+        <div className="overflow-x-auto -mx-4 md:mx-0">
+          <div className="inline-block min-w-full align-middle">
+            <table className="min-w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-3 px-2 md:px-4 text-xs md:text-sm font-medium text-muted-foreground">Issue</th>
+                  <th className="text-left py-3 px-2 md:px-4 text-xs md:text-sm font-medium text-muted-foreground hidden sm:table-cell">Category</th>
+                  <th className="text-left py-3 px-2 md:px-4 text-xs md:text-sm font-medium text-muted-foreground hidden md:table-cell">Zone</th>
+                  <th className="text-left py-3 px-2 md:px-4 text-xs md:text-sm font-medium text-muted-foreground hidden lg:table-cell">Reporter</th>
+                  <th className="text-left py-3 px-2 md:px-4 text-xs md:text-sm font-medium text-muted-foreground">Status</th>
+                  <th className="text-left py-3 px-2 md:px-4 text-xs md:text-sm font-medium text-muted-foreground">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {mockIssues.map(issue => (
+                  <tr key={issue.id} className="border-b hover:bg-muted/50 transition-colors">
+                    <td className="py-3 px-2 md:px-4">
+                      <div className="font-medium text-xs md:text-sm">{issue.title}</div>
+                      <div className="text-xs text-muted-foreground">{issue.date}</div>
+                    </td>
+                    <td className="py-3 px-2 md:px-4 hidden sm:table-cell">
+                      <Badge variant="outline" className="text-xs">{issue.category}</Badge>
+                    </td>
+                    <td className="py-3 px-2 md:px-4 text-xs md:text-sm hidden md:table-cell">{issue.zone}</td>
+                    <td className="py-3 px-2 md:px-4 text-xs md:text-sm hidden lg:table-cell">{issue.citizen}</td>
+                    <td className="py-3 px-2 md:px-4">
+                      <Badge variant={issue.status === "pending" ? "secondary" : issue.status === "urgent" ? "destructive" : "default"} className="text-xs">
+                        {issue.status}
+                      </Badge>
+                    </td>
+                    <td className="py-3 px-2 md:px-4">
+                      <Button size="sm" variant="ghost" onClick={() => navigate(`/official-dashboard/issues/${issue.id}`)} className="text-xs md:text-sm">
+                        View
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </Card>
     </div>

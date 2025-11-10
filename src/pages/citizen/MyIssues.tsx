@@ -67,8 +67,8 @@ const MyIssues = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-3xl font-marcellus font-bold mb-2">My Issues</h1>
-        <p className="text-muted-foreground">Track and manage all your reported issues</p>
+        <h1 className="text-2xl md:text-3xl font-marcellus font-bold mb-2">My Issues</h1>
+        <p className="text-sm md:text-base text-muted-foreground">Track and manage all your reported issues</p>
       </div>
 
       {/* Filters */}

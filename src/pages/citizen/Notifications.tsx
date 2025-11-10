@@ -93,38 +93,39 @@ const Notifications = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-marcellus font-bold mb-2">Notifications</h1>
-          <p className="text-muted-foreground">Stay updated on your reported issues</p>
+          <h1 className="text-2xl md:text-3xl font-marcellus font-bold mb-2">Notifications</h1>
+          <p className="text-sm md:text-base text-muted-foreground">Stay updated on your reported issues</p>
         </div>
         
         {unreadCount > 0 && (
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" size="sm" className="gap-2 hidden sm:flex">
             <Check className="w-4 h-4" />
-            Mark All as Read
+            <span className="hidden md:inline">Mark All as Read</span>
+            <span className="md:hidden">Mark Read</span>
           </Button>
         )}
       </div>
 
       {/* Notification Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-3 md:gap-4">
         <Card>
-          <CardContent className="pt-6 text-center">
-            <div className="text-3xl font-bold text-info">{unreadCount}</div>
-            <div className="text-sm text-muted-foreground mt-1">Unread</div>
+          <CardContent className="pt-4 md:pt-6 text-center">
+            <div className="text-2xl md:text-3xl font-bold text-info">{unreadCount}</div>
+            <div className="text-xs md:text-sm text-muted-foreground mt-1">Unread</div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6 text-center">
-            <div className="text-3xl font-bold text-success">12</div>
-            <div className="text-sm text-muted-foreground mt-1">This Week</div>
+          <CardContent className="pt-4 md:pt-6 text-center">
+            <div className="text-2xl md:text-3xl font-bold text-success">12</div>
+            <div className="text-xs md:text-sm text-muted-foreground mt-1">This Week</div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="pt-6 text-center">
-            <div className="text-3xl font-bold text-muted-foreground">45</div>
-            <div className="text-sm text-muted-foreground mt-1">Total</div>
+          <CardContent className="pt-4 md:pt-6 text-center">
+            <div className="text-2xl md:text-3xl font-bold text-muted-foreground">45</div>
+            <div className="text-xs md:text-sm text-muted-foreground mt-1">Total</div>
           </CardContent>
         </Card>
       </div>
@@ -178,27 +179,27 @@ const Notifications = () => {
 
       {/* Notifications List */}
       <div className="space-y-3">
-        <h3 className="font-semibold">Recent Notifications</h3>
+        <h3 className="font-semibold text-base md:text-lg">Recent Notifications</h3>
         {notifications.map((notif) => (
           <Card
             key={notif.id}
             className={`hover-scale transition-all cursor-pointer ${getNotificationStyle(notif.type, notif.read)}`}
           >
             <CardContent className="pt-4">
-              <div className="flex gap-4">
-                <div className="text-3xl flex-shrink-0">{notif.icon}</div>
+              <div className="flex gap-3 md:gap-4">
+                <div className="text-2xl md:text-3xl flex-shrink-0">{notif.icon}</div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2 mb-1">
-                    <h4 className="font-semibold">{notif.title}</h4>
+                    <h4 className="font-semibold text-sm md:text-base">{notif.title}</h4>
                     {!notif.read && (
-                      <Badge variant="default" className="shrink-0 h-6">New</Badge>
+                      <Badge variant="default" className="shrink-0 h-5 md:h-6 text-xs">New</Badge>
                     )}
                   </div>
-                  <p className="text-sm text-muted-foreground mb-2">{notif.message}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground mb-2">{notif.message}</p>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">{notif.time}</span>
                     {notif.issueId && (
-                      <Button variant="ghost" size="sm" className="h-7">
+                      <Button variant="ghost" size="sm" className="h-6 md:h-7 text-xs md:text-sm">
                         View Issue
                       </Button>
                     )}

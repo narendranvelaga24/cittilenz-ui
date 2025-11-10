@@ -73,7 +73,7 @@ const OfficialDashboard = () => {
           </header>
 
           {/* Main Content Area */}
-          <main className="flex-1 overflow-auto">
+          <main className="flex-1 overflow-auto p-4 md:p-6">
             <Routes>
               <Route index element={<DashboardHome />} />
               <Route path="issues" element={<Issues />} />

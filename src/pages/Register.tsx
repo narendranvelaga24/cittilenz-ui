@@ -30,7 +30,7 @@ const Register = () => {
     <div className="min-h-screen bg-gradient-to-br from-primary via-primary/90 to-secondary">
       <Header />
       
-      <div className="min-h-screen flex items-center justify-center px-6 pt-20 pb-12">
+      <div className="min-h-screen flex items-center justify-center px-4 md:px-6 pt-20 pb-12">
         <Card className="w-full max-w-md fade-in-up shadow-2xl">
           <CardHeader className="space-y-4 text-center">
             <div className="flex justify-center mb-4">

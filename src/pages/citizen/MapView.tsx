@@ -37,20 +37,19 @@ const MapView = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-marcellus font-bold mb-2">Map View</h1>
-          <p className="text-muted-foreground">Visualize issues in your neighborhood</p>
+          <h1 className="text-2xl md:text-3xl font-marcellus font-bold mb-2">Map View</h1>
+          <p className="text-sm md:text-base text-muted-foreground">Visualize issues in your neighborhood</p>
         </div>
         
-        <div className="flex gap-2">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                <Filter className="w-4 h-4" />
-                Filters
-              </Button>
-            </SheetTrigger>
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-2">
+              <Filter className="w-4 h-4" />
+              <span className="hidden sm:inline">Filters</span>
+            </Button>
+          </SheetTrigger>
             <SheetContent>
               <SheetHeader>
                 <SheetTitle>Map Filters</SheetTitle>
@@ -120,13 +119,12 @@ const MapView = () => {
                 </div>
               </div>
             </SheetContent>
-          </Sheet>
-        </div>
+        </Sheet>
       </div>
 
       {/* Map Container */}
       <Card className="overflow-hidden">
-        <div className="h-[calc(100vh-16rem)] bg-muted relative rounded-lg">
+        <div className="h-[50vh] md:h-[calc(100vh-16rem)] bg-muted relative rounded-lg">
           {/* Placeholder Map - Replace with actual Leaflet/Mapbox implementation */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center space-y-4">
@@ -140,9 +138,9 @@ const MapView = () => {
           </div>
 
           {/* Mock Pins Overlay */}
-          <div className="absolute top-4 left-4 space-y-2">
+          <div className="absolute top-4 left-4 space-y-2 max-w-[200px] md:max-w-xs">
             {mockPins.slice(0, 3).map((pin) => (
-              <Card key={pin.id} className="p-3 max-w-xs hover-lift cursor-pointer">
+              <Card key={pin.id} className="p-2 md:p-3 hover-lift cursor-pointer">
                 <div className="flex gap-2">
                   <div className="text-xl">{getStatusColor(pin.status)}</div>
                   <div className="flex-1 min-w-0">
@@ -155,18 +153,18 @@ const MapView = () => {
           </div>
 
           {/* Legend */}
-          <Card className="absolute bottom-4 right-4 p-4">
-            <h4 className="font-semibold text-sm mb-3">Legend</h4>
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center gap-2">
+          <Card className="absolute bottom-4 right-4 p-3 md:p-4">
+            <h4 className="font-semibold text-xs md:text-sm mb-2 md:mb-3">Legend</h4>
+            <div className="space-y-1 md:space-y-2 text-xs md:text-sm">
+              <div className="flex items-center gap-1 md:gap-2">
                 <span>🟡</span>
                 <span>Pending</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 md:gap-2">
                 <span>🔵</span>
                 <span>In Progress</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 md:gap-2">
                 <span>🟢</span>
                 <span>Resolved</span>
               </div>
