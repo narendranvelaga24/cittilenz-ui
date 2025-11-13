@@ -12,18 +12,21 @@ interface AuthContextType {
   login: (email: string, password: string) => boolean;
   logout: () => void;
   isAuthenticated: boolean;
+  initialized: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     const savedUser = localStorage.getItem("cittilenz_user");
     if (savedUser) {
       setUser(JSON.parse(savedUser));
     }
+    setInitialized(true);
   }, []);
 
   const login = (email: string, password: string): boolean => {
@@ -49,7 +52,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user, initialized }}>
       {children}
     </AuthContext.Provider>
   );
