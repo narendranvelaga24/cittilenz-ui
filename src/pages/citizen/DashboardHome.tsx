@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,8 +7,16 @@ import potholeImg from "@/assets/pothole.jpg";
 import streetlightImg from "@/assets/streetlight.jpg";
 import garbageImg from "@/assets/garbage.jpg";
 
-const DashboardHome = ({ onQuickReport, onIssueSelect }: { onQuickReport: () => void; onIssueSelect: (issue: any) => void }) => {
+interface CitizenOutletContext {
+  onQuickReport?: () => void;
+  onIssueSelect?: (issue: any) => void;
+}
+
+const DashboardHome = ({ onQuickReport, onIssueSelect }: { onQuickReport?: () => void; onIssueSelect?: (issue: any) => void }) => {
   const navigate = useNavigate();
+  const outletCtx = useOutletContext<CitizenOutletContext>() || {};
+  const quickReportFn = onQuickReport || outletCtx.onQuickReport || (() => {});
+  const issueSelectFn = onIssueSelect || outletCtx.onIssueSelect || (() => {});
 
   const mockIssues = [
     { id: 1, title: "Pothole on Main Street", status: "In Progress", date: "2025-11-01", image: potholeImg, priority: "high" },
@@ -35,7 +43,7 @@ const DashboardHome = ({ onQuickReport, onIssueSelect }: { onQuickReport: () => 
           <Button 
             size="lg" 
             className="gap-2 bg-foreground hover:opacity-90 w-full sm:w-auto"
-            onClick={onQuickReport}
+            onClick={quickReportFn}
           >
             <Zap className="w-5 h-5" />
             Quick Report
@@ -128,7 +136,7 @@ const DashboardHome = ({ onQuickReport, onIssueSelect }: { onQuickReport: () => 
             <Card 
               key={issue.id} 
               className="hover-lift overflow-hidden cursor-pointer"
-              onClick={() => onIssueSelect(issue)}
+              onClick={() => issueSelectFn(issue)}
             >
               <div className="relative">
                 <img src={issue.image} alt={issue.title} className="w-full h-40 md:h-48 object-cover" />

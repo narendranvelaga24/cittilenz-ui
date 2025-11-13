@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -7,14 +7,6 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Bell, LogOut, Menu } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import DashboardHome from "./admin/DashboardHome";
-import Users from "./admin/Users";
-import Issues from "./admin/Issues";
-import Departments from "./admin/Departments";
-import Analytics from "./admin/Analytics";
-import Settings from "./admin/Settings";
-import AuditLogs from "./admin/AuditLogs";
-import AI from "./admin/AI";
 
 const AdminDashboard = () => {
   const { user, logout } = useAuth();
@@ -80,17 +72,7 @@ const AdminDashboard = () => {
 
           {/* Main Content */}
           <main className="flex-1 p-4 md:p-6 overflow-auto">
-            <Routes>
-              <Route path="/" element={<DashboardHome />} />
-              <Route path="/users" element={<Users />} />
-              <Route path="/issues" element={<Issues />} />
-              <Route path="/departments" element={<Departments />} />
-              <Route path="/analytics" element={<Analytics />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/audit" element={<AuditLogs />} />
-              <Route path="/ai" element={<AI />} />
-              <Route path="*" element={<Navigate to="/admin-dashboard" replace />} />
-            </Routes>
+            <Outlet />
           </main>
         </div>
       </div>

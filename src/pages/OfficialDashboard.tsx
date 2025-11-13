@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { OfficialSidebar } from "@/components/official/OfficialSidebar";
 import { Bell, User, LogOut, Menu } from "lucide-react";
@@ -7,13 +7,6 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
-import DashboardHome from "./official/DashboardHome";
-import Issues from "./official/Issues";
-import IssueDetail from "./official/IssueDetail";
-import MapAnalytics from "./official/MapAnalytics";
-import Performance from "./official/Performance";
-import Notifications from "./official/Notifications";
-import Profile from "./official/Profile";
 
 const OfficialDashboard = () => {
   const { user, logout } = useAuth();
@@ -74,16 +67,7 @@ const OfficialDashboard = () => {
 
           {/* Main Content Area */}
           <main className="flex-1 overflow-auto p-4 md:p-6">
-            <Routes>
-              <Route index element={<DashboardHome />} />
-              <Route path="issues" element={<Issues />} />
-              <Route path="issues/:id" element={<IssueDetail />} />
-              <Route path="map" element={<MapAnalytics />} />
-              <Route path="performance" element={<Performance />} />
-              <Route path="notifications" element={<Notifications />} />
-              <Route path="profile" element={<Profile />} />
-              <Route path="*" element={<Navigate to="/official-dashboard" replace />} />
-            </Routes>
+            <Outlet />
           </main>
         </div>
       </div>

@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -12,12 +11,6 @@ import { FAB } from "@/components/ui/floating-action-button";
 import { Bell, LogOut, Menu, Plus } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
-import DashboardHome from "./citizen/DashboardHome";
-import MyIssues from "./citizen/MyIssues";
-import MapView from "./citizen/MapView";
-import Notifications from "./citizen/Notifications";
-import Profile from "./citizen/Profile";
-import Help from "./citizen/Help";
 
 
 const CitizenDashboard = () => {
@@ -103,15 +96,7 @@ const CitizenDashboard = () => {
           {/* Main Content */}
           <main className="flex-1 p-4 md:p-6 overflow-auto pb-20 md:pb-6">
             <div className="max-w-7xl mx-auto">
-              <Routes>
-                <Route index element={<DashboardHome onQuickReport={() => setQuickReportOpen(true)} onIssueSelect={setSelectedIssue} />} />
-                <Route path="my-issues" element={<MyIssues />} />
-                <Route path="map" element={<MapView />} />
-                <Route path="notifications" element={<Notifications />} />
-                <Route path="profile" element={<Profile />} />
-                <Route path="help" element={<Help />} />
-                <Route path="*" element={<Navigate to="/citizen-dashboard" replace />} />
-              </Routes>
+              <Outlet context={{ onQuickReport: () => setQuickReportOpen(true), onIssueSelect: setSelectedIssue }} />
             </div>
           </main>
 
