@@ -1,6 +1,6 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { getUserProfile, updateProfile } from "../../api/users.api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { deactivateAccount, deleteAccount, getUserProfile, changePassword, updateProfile } from "../../api/users.api";
 import { Alert } from "../../components/ui/Alert.jsx";
 import { PageHeader } from "../../components/ui/PageHeader.jsx";
 import { errorMessage } from "../../lib/apiResponse";
@@ -8,7 +8,7 @@ import { formatDate } from "../../lib/format";
 import { useAuth } from "../auth/useAuth";
 
 export function ProfilePage() {
-  const { refreshUser, user } = useAuth();
+  const { refreshUser, logout, user } = useAuth();
   const isCitizen = user.role === "CITIZEN";
   const queryClient = useQueryClient();
   const { data: profile } = useQuery({
@@ -18,10 +18,51 @@ export function ProfilePage() {
   });
   const profileUser = profile || user;
   const [form, setForm] = useState({ fullName: user.fullName || "", email: user.email || "", mobile: user.mobile || "" });
+  const [passwordForm, setPasswordForm] = useState({ oldPassword: "", newPassword: "", confirmNewPassword: "" });
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [toastMessage, setToastMessage] = useState("");
   const city = profileUser.city || profileUser.cityName;
   const createdAt = profileUser.createdAt || profileUser.created_at || profileUser.createdOn || profileUser.createdDate;
+
+  useEffect(() => {
+    if (!toastMessage) return;
+    const timeout = setTimeout(() => setToastMessage(""), 4000);
+    return () => clearTimeout(timeout);
+  }, [toastMessage]);
+
+  const changePasswordMutation = useMutation({
+    mutationFn: changePassword,
+    onSuccess: async () => {
+      setMessage("Password changed successfully. Please sign in again.");
+      setToastMessage("Password changed successfully. Please sign in again.");
+      setError("");
+      await logout();
+    },
+    onError: (err) => setError(errorMessage(err)),
+  });
+
+  const deactivateMutation = useMutation({
+    mutationFn: deactivateAccount,
+    onSuccess: async () => {
+      setMessage("Account deactivated.");
+      setToastMessage("Account deactivated.");
+      setError("");
+      await logout();
+    },
+    onError: (err) => setError(errorMessage(err)),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteAccount,
+    onSuccess: async () => {
+      setMessage("Account deleted.");
+      setToastMessage("Account deleted.");
+      setError("");
+      await logout();
+    },
+    onError: (err) => setError(errorMessage(err)),
+  });
 
   function update(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -48,13 +89,48 @@ export function ProfilePage() {
       await refreshUser();
       queryClient.invalidateQueries({ queryKey: ["user-profile"] });
       setMessage("Profile updated.");
+      setToastMessage("Profile updated.");
     } catch (err) {
       setError(errorMessage(err));
     }
   }
 
+  async function submitPassword(event) {
+    event.preventDefault();
+    if (!isCitizen) {
+      setError("Password change is available only for citizen accounts in this backend.");
+      return;
+    }
+    if (!passwordForm.newPassword || passwordForm.newPassword.length < 8) {
+      setError("New password must be at least 8 characters.");
+      return;
+    }
+    if (passwordForm.newPassword !== passwordForm.confirmNewPassword) {
+      setError("New passwords do not match.");
+      return;
+    }
+    setError("");
+    setMessage("");
+    changePasswordMutation.mutate(passwordForm);
+  }
+
+  function updatePassword(field, value) {
+    setPasswordForm((current) => ({ ...current, [field]: value }));
+  }
+
+  function handleDeactivate() {
+    if (!window.confirm("Deactivate your account? You will be logged out immediately.")) return;
+    deactivateMutation.mutate();
+  }
+
+  function handleDelete() {
+    if (!window.confirm("Delete your account permanently? This cannot be undone.")) return;
+    deleteMutation.mutate();
+  }
+
   return (
     <section className="page-stack">
+      {toastMessage && <div className="toast-message">{toastMessage}</div>}
       <PageHeader eyebrow="Account" title="Your profile" description="Keep contact details accurate for civic notifications." />
       {message && <Alert tone="success">{message}</Alert>}
       {error && <Alert tone="danger">{error}</Alert>}
@@ -65,6 +141,17 @@ export function ProfilePage() {
           <label>Mobile<input value={form.mobile} onChange={(event) => update("mobile", event.target.value)} disabled={!isCitizen} /></label>
           {isCitizen ? <button className="primary-button">Save changes</button> : <p className="muted">This role is read-only in profile update APIs.</p>}
         </form>
+        {isCitizen && (
+          <form className="panel form-grid" onSubmit={submitPassword}>
+            <h2>Change password</h2>
+            <label>Current password<input type="password" value={passwordForm.oldPassword} onChange={(event) => updatePassword("oldPassword", event.target.value)} required /></label>
+            <label>New password<input type="password" minLength={8} value={passwordForm.newPassword} onChange={(event) => updatePassword("newPassword", event.target.value)} required /></label>
+            <label>Confirm new password<input type="password" minLength={8} value={passwordForm.confirmNewPassword} onChange={(event) => updatePassword("confirmNewPassword", event.target.value)} required /></label>
+            <button className="primary-button" disabled={changePasswordMutation.isPending || passwordForm.newPassword.length < 8 || passwordForm.newPassword !== passwordForm.confirmNewPassword}>
+              {changePasswordMutation.isPending ? "Changing..." : "Change password"}
+            </button>
+          </form>
+        )}
         <div className="panel">
           <h2>Account details</h2>
           <dl className="details-list">
@@ -73,6 +160,16 @@ export function ProfilePage() {
             <dt>City</dt><dd>{city || "Not sent by backend"}</dd>
             <dt>Created at</dt><dd>{createdAt ? formatDate(createdAt) : "Not sent by backend"}</dd>
           </dl>
+          {isCitizen && (
+            <div className="action-cell">
+              <button type="button" className="secondary-button" onClick={handleDeactivate} disabled={deactivateMutation.isPending}>
+                {deactivateMutation.isPending ? "Deactivating..." : "Deactivate account"}
+              </button>
+              <button type="button" className="danger-button" onClick={handleDelete} disabled={deleteMutation.isPending}>
+                {deleteMutation.isPending ? "Deleting..." : "Delete account"}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </section>

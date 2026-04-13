@@ -1,14 +1,18 @@
-import { Moon, Sun, SwatchBook } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const themes = [
-  { id: "porcelain", label: "Porcelain", hint: "F6/F4/00", icon: Sun },
-  { id: "noir", label: "Noir", hint: "02/DD/F4", icon: Moon },
-  { id: "civic-ink", label: "Royal Ink", hint: "1D/FF/FF", icon: SwatchBook },
+  { id: "light", label: "Light", hint: "F6/F4/00", icon: Sun },
+  { id: "dark", label: "Dark", hint: "02/DD/F4", icon: Moon },
 ];
 
 export function ThemeSwitch() {
-  const [theme, setTheme] = useState(() => localStorage.getItem("cittilenz_theme") || "porcelain");
+  const [theme, setTheme] = useState(() => {
+    const stored = localStorage.getItem("cittilenz_theme");
+    if (stored === "porcelain") return "light";
+    if (stored === "noir" || stored === "civic-ink") return "dark";
+    return stored || "light";
+  });
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;

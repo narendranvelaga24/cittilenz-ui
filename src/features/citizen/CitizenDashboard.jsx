@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { getCitizenDashboard } from "../../api/issues.api";
 import { HeroPanel } from "../../components/ui/HeroPanel.jsx";
+import { OpenStreetMapAttribution } from "../../components/ui/OpenStreetMapAttribution.jsx";
 import { StatCard } from "../../components/ui/StatCard.jsx";
 
 export function CitizenDashboard() {
@@ -21,6 +22,7 @@ export function CitizenDashboard() {
         <StatCard label="Active" value={isLoading ? "..." : data?.totalAssignedOrInProgress} tone="orange" />
         <StatCard label="Escalated" value={isLoading ? "..." : data?.totalEscalated} tone="red" />
       </div>
+      <OpenStreetMapAttribution />
     </section>
   );
 }

@@ -13,6 +13,8 @@ export default [
         FormData: "readonly",
         localStorage: "readonly",
         navigator: "readonly",
+        setTimeout: "readonly",
+        clearTimeout: "readonly",
         URL: "readonly",
         window: "readonly",
       },

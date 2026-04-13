@@ -5,3 +5,7 @@ export async function getIssueTypes(departmentId) {
   const params = departmentId ? { departmentId } : undefined;
   return unwrapResponse(await api.get("/issue-types", { params }));
 }
+
+export async function getIssueTypeById(id) {
+  return unwrapResponse(await api.get(`/issue-types/${id}`));
+}

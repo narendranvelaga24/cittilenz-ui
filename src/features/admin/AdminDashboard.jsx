@@ -1,10 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { getAdminDashboard } from "../../api/admin.api";
 import { HeroPanel } from "../../components/ui/HeroPanel.jsx";
+import { OpenStreetMapAttribution } from "../../components/ui/OpenStreetMapAttribution.jsx";
 import { StatCard } from "../../components/ui/StatCard.jsx";
 
 export function AdminDashboard() {
-  const { data, isLoading } = useQuery({ queryKey: ["admin-dashboard"], queryFn: getAdminDashboard });
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-dashboard"],
+    queryFn: getAdminDashboard,
+    staleTime: 10 * 60_000,
+  });
 
   return (
     <section className="page-stack">
@@ -19,6 +24,7 @@ export function AdminDashboard() {
         <StatCard label="Ward superiors" value={isLoading ? "..." : data?.totalWardSuperiors} tone="orange" />
         <StatCard label="Issues" value={isLoading ? "..." : data?.totalIssues} tone="red" />
       </div>
+      <OpenStreetMapAttribution />
     </section>
   );
 }

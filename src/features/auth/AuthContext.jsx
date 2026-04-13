@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { getCurrentUser, login as loginRequest } from "../../api/auth.api";
+import { getCurrentUser, login as loginRequest, logout as logoutRequest } from "../../api/auth.api";
 import { clearSession, getStoredToken, getStoredUser, setStoredToken, setStoredUser } from "../../lib/storage";
 import { AuthContext } from "./auth-context";
 
@@ -44,7 +44,12 @@ export function AuthProvider({ children }) {
     return data.user;
   }
 
-  function logout() {
+  async function logout() {
+    try {
+      await logoutRequest();
+    } catch {
+      // Backend logout may fail, but we still clear client-side session
+    }
     clearSession();
     setToken(null);
     setUser(null);

@@ -2,10 +2,15 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { getSuperiorDashboard } from "../../api/dashboards.api";
 import { HeroPanel } from "../../components/ui/HeroPanel.jsx";
+import { OpenStreetMapAttribution } from "../../components/ui/OpenStreetMapAttribution.jsx";
 import { StatCard } from "../../components/ui/StatCard.jsx";
 
 export function SuperiorDashboard() {
-  const { data, isLoading } = useQuery({ queryKey: ["superior-dashboard"], queryFn: getSuperiorDashboard });
+  const { data, isLoading } = useQuery({
+    queryKey: ["superior-dashboard"],
+    queryFn: getSuperiorDashboard,
+    staleTime: 10 * 60_000,
+  });
 
   return (
     <section className="page-stack">
@@ -18,6 +23,7 @@ export function SuperiorDashboard() {
       <div className="stats-grid">
         <StatCard label="Total escalated" value={isLoading ? "..." : data?.totalEscalated} tone="red" />
       </div>
+      <OpenStreetMapAttribution />
     </section>
   );
 }

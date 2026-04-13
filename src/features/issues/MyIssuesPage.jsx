@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { getMyIssues } from "../../api/issues.api";
 import { IssueStatusBadge } from "../../components/issues/IssueStatusBadge.jsx";
 import { DataTable } from "../../components/ui/DataTable.jsx";
+import { OpenStreetMapAttribution } from "../../components/ui/OpenStreetMapAttribution.jsx";
 import { PageHeader } from "../../components/ui/PageHeader.jsx";
 import { Pagination } from "../../components/ui/Pagination.jsx";
 import { formatDate } from "../../lib/format";
@@ -39,6 +40,7 @@ export function MyIssuesPage() {
         emptyDescription="Create your first report to start tracking civic work."
       />
       <Pagination page={page} totalPages={data?.totalPages || 1} onPageChange={setPage} />
+      <OpenStreetMapAttribution />
     </section>
   );
 }

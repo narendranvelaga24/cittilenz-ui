@@ -25,6 +25,10 @@ export function FileUpload({
 
   function validateFile(file) {
     if (!file) return true;
+    if (file.size === 0) {
+      onError?.("Image file is empty. Please select a valid image.");
+      return false;
+    }
     if (!file.type.startsWith("image/")) {
       onError?.("Please upload an image file.");
       return false;

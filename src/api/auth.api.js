@@ -6,7 +6,11 @@ export async function login(payload) {
 }
 
 export async function getCurrentUser() {
-  return unwrapResponse(await api.get("/auth/me"));
+  return unwrapResponse(await api.get("/users/me"));
+}
+
+export async function logout() {
+  return unwrapResponse(await api.post("/auth/logout"));
 }
 
 export async function registerCitizen(payload) {

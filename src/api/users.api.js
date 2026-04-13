@@ -12,3 +12,11 @@ export async function updateProfile(payload) {
 export async function changePassword(payload) {
   return unwrapResponse(await api.patch("/users/me/password", payload));
 }
+
+export async function deactivateAccount() {
+  return unwrapResponse(await api.patch("/users/me/deactivate"));
+}
+
+export async function deleteAccount() {
+  return unwrapResponse(await api.delete("/users/me"));
+}

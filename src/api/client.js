@@ -18,11 +18,16 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Handle token expiration / invalid JWT
     if (error.response?.status === 401) {
       clearSession();
       if (window.location.pathname !== "/login") {
         window.location.assign("/login");
       }
+    }
+    // Handle 403 (Access Denied) - don't redirect, let component handle UI
+    if (error.response?.status === 403) {
+      // Component will see error and display "Access Denied" message
     }
     return Promise.reject(error);
   },

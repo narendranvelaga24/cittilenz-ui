@@ -63,6 +63,8 @@ export function AnalyticsPage() {
     { name: "Escalated", value: data?.escalatedIssues || 0 },
   ];
 
+  const hasData = data && data.totalIssues > 0;
+
   return (
     <section className="page-stack">
       <PageHeader eyebrow="SLA analytics" title="Service health overview" description="Compliance, escalation pressure, and resolution throughput in one compact view." />
@@ -127,11 +129,22 @@ export function AnalyticsPage() {
       {!dateRangeIsValid && mode === "filter" && <Alert tone="danger">From date must be earlier than or equal to To date.</Alert>}
       {error && <Alert tone="danger">{error.message}</Alert>}
       <div className="stats-grid">
-        <StatCard label="Total issues" value={isLoading ? "..." : data?.totalIssues} />
+        <StatCard label="Total issues" value={isLoading ? "..." : data?.totalIssues || 0} />
         <StatCard label="SLA compliance" value={isLoading ? "..." : formatPercent(data?.slaCompliancePercentage)} tone="green" />
         <StatCard label="Escalation rate" value={isLoading ? "..." : formatPercent(data?.escalationRatePercentage)} tone="orange" />
-        <StatCard label="Hard breaches" value={isLoading ? "..." : data?.hardSlaBreaches} tone="red" />
+        <StatCard label="Hard breaches" value={isLoading ? "..." : data?.hardSlaBreaches || 0} tone="red" />
       </div>
+      {hasData && (
+        <div className="stats-grid">
+          <StatCard label="Soft breaches" value={isLoading ? "..." : data?.softSlaBreaches || 0} tone="yellow" />
+          <StatCard label="Avg acknowledgement" value={isLoading ? "..." : `${Number(data?.averageAcknowledgementMinutes || 0).toFixed(1)}m`} />
+          <StatCard label="Avg resolution" value={isLoading ? "..." : `${Number(data?.averageResolutionMinutes || 0).toFixed(1)}m`} />
+          <StatCard label="Reassignments" value={isLoading ? "..." : formatPercent(data?.reassignmentRatePercentage)} />
+        </div>
+      )}
+      {hasData && data?.supervisorInterventionRequired > 0 && (
+        <Alert tone="warning">⚠️ {data.supervisorInterventionRequired} issues require supervisor intervention.</Alert>
+      )}
       <div className="panel chart-panel">
         <ResponsiveContainer width="100%" height={320}>
           <BarChart data={chartData}>

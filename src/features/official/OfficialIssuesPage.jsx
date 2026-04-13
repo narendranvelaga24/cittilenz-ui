@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getRoleIssues, resolveIssue, startIssue } from "../../api/issues.api";
 import { IssueStatusBadge } from "../../components/issues/IssueStatusBadge.jsx";
 import { Alert } from "../../components/ui/Alert.jsx";
 import { DataTable } from "../../components/ui/DataTable.jsx";
 import { FileUpload } from "../../components/ui/FileUpload.jsx";
+import { OpenStreetMapAttribution } from "../../components/ui/OpenStreetMapAttribution.jsx";
 import { PageHeader } from "../../components/ui/PageHeader.jsx";
 import { Pagination } from "../../components/ui/Pagination.jsx";
 import { useAuth } from "../auth/useAuth";
@@ -19,27 +20,65 @@ export function OfficialIssuesPage({ mode }) {
   const [departmentId, setDepartmentId] = useState("");
   const [reportedBy, setReportedBy] = useState("");
   const [page, setPage] = useState(0);
+  const [debouncedWardId, setDebouncedWardId] = useState("");
+  const [debouncedDepartmentId, setDebouncedDepartmentId] = useState("");
+  const [debouncedReportedBy, setDebouncedReportedBy] = useState("");
+
+  // Debounce filter inputs to prevent excessive API calls per contract
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedWardId(wardId);
+      setPage(0);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [wardId]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedDepartmentId(departmentId);
+      setPage(0);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [departmentId]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedReportedBy(reportedBy);
+      setPage(0);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [reportedBy]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [toastMessage, setToastMessage] = useState("");
   const queryClient = useQueryClient();
 
-  const queryKey = ["role-issues", role, status, wardId, departmentId, reportedBy, page];
+  useEffect(() => {
+    if (!toastMessage) return;
+    const timeout = setTimeout(() => setToastMessage(""), 4000);
+    return () => clearTimeout(timeout);
+  }, [toastMessage]);
+
+  const queryKey = ["role-issues", role, status, debouncedWardId, debouncedDepartmentId, debouncedReportedBy, page];
   const { data, isLoading } = useQuery({
     queryKey,
     queryFn: () => getRoleIssues(role, {
       status: status || undefined,
-      wardId: role === "ADMIN" && wardId ? Number(wardId) : undefined,
-      departmentId: role === "ADMIN" && departmentId ? Number(departmentId) : undefined,
-      reportedBy: reportedBy ? Number(reportedBy) : undefined,
+      wardId: role === "ADMIN" && debouncedWardId ? Number(debouncedWardId) : undefined,
+      departmentId: role === "ADMIN" && debouncedDepartmentId ? Number(debouncedDepartmentId) : undefined,
+      reportedBy: debouncedReportedBy ? Number(debouncedReportedBy) : undefined,
       page,
       size: 10,
     }),
   });
 
+  const [isResolving, setIsResolving] = useState(false);
+
   const startMutation = useMutation({
     mutationFn: (issue) => startIssue(issue.id, issue.version),
     onSuccess: () => {
       setMessage("Work started.");
+      setToastMessage("Work started.");
       queryClient.invalidateQueries({ queryKey: ["role-issues"] });
     },
     onError: (err) => setError(errorMessage(err)),
@@ -52,15 +91,19 @@ export function OfficialIssuesPage({ mode }) {
       setError("Upload a valid fixed image.");
       return;
     }
+    setIsResolving(true);
     const payload = new FormData();
     payload.append("version", issue.version);
     payload.append("image", file);
     try {
       await resolveIssue(issue.id, payload);
       setMessage("Issue resolved.");
+      setToastMessage("Issue resolved.");
       queryClient.invalidateQueries({ queryKey: ["role-issues"] });
     } catch (err) {
       setError(errorMessage(err));
+    } finally {
+      setIsResolving(false);
     }
   }
 
@@ -69,7 +112,15 @@ export function OfficialIssuesPage({ mode }) {
     { key: "title", header: "Issue" },
     { key: "status", header: "Status", render: (issue) => <IssueStatusBadge status={issue.status} /> },
     { key: "wardName", header: "Ward", render: (issue) => issue.wardName || "N/A" },
-    { key: "hardSlaDeadline", header: "SLA", render: (issue) => formatDate(issue.hardSlaDeadline) },
+    {
+      key: "hardSlaDeadline",
+      header: "SLA",
+      render: (issue) => {
+        const text = formatDate(issue.hardSlaDeadline);
+        const isBreached = issue.hardSlaBreached ? "breached" : "on-track";
+        return <span className={`sla-deadline sla-${isBreached}`}>{text}</span>;
+      },
+    },
     {
       key: "actions",
       header: "Actions",
@@ -78,10 +129,10 @@ export function OfficialIssuesPage({ mode }) {
           {role === "ADMIN" && <span className="action-note">Read-only</span>}
           {role === "OFFICIAL" && issue.status === "SUBMITTED" && <span className="action-note">Waiting for assignment</span>}
           {role === "OFFICIAL" && issue.status === "ASSIGNED" && (
-            <button onClick={() => startMutation.mutate(issue)}>Start</button>
+            <button disabled={startMutation.isPending} onClick={() => startMutation.mutate(issue)}>{startMutation.isPending ? "Starting..." : "Start"}</button>
           )}
           {role === "OFFICIAL" && issue.status === "IN_PROGRESS" && (
-            <ResolveIssueAction issue={issue} onError={setError} onResolve={handleResolve} />
+            <ResolveIssueAction issue={issue} onError={setError} onResolve={handleResolve} isResolving={isResolving} />
           )}
           {role === "OFFICIAL" && ["RESOLVED", "ESCALATED", "REJECTED"].includes(issue.status) && <span className="action-note">No officer action</span>}
         </div>
@@ -91,6 +142,7 @@ export function OfficialIssuesPage({ mode }) {
 
   return (
     <section className="page-stack">
+      {toastMessage && <div className="toast-message">{toastMessage}</div>}
       <PageHeader
         eyebrow={role === "ADMIN" ? "Admin issue view" : "Official work queue"}
         title={role === "ADMIN" ? "All issues" : "Assigned issues"}
@@ -110,7 +162,6 @@ export function OfficialIssuesPage({ mode }) {
                 value={wardId}
                 onChange={(event) => {
                   setWardId(event.target.value.replace(/[^0-9]/g, ""));
-                  setPage(0);
                 }}
               />
               <input
@@ -118,7 +169,6 @@ export function OfficialIssuesPage({ mode }) {
                 value={departmentId}
                 onChange={(event) => {
                   setDepartmentId(event.target.value.replace(/[^0-9]/g, ""));
-                  setPage(0);
                 }}
               />
             </>
@@ -128,7 +178,6 @@ export function OfficialIssuesPage({ mode }) {
             value={reportedBy}
             onChange={(event) => {
               setReportedBy(event.target.value.replace(/[^0-9]/g, ""));
-              setPage(0);
             }}
           />
         </div>
@@ -146,11 +195,12 @@ export function OfficialIssuesPage({ mode }) {
         emptyTitle="No matching issues"
       />
       <Pagination page={page} totalPages={data?.totalPages || 1} onPageChange={setPage} />
+      <OpenStreetMapAttribution />
     </section>
   );
 }
 
-function ResolveIssueAction({ issue, onError, onResolve }) {
+function ResolveIssueAction({ issue, onError, onResolve, isResolving }) {
   const [file, setFile] = useState(null);
 
   return (
@@ -163,8 +213,8 @@ function ResolveIssueAction({ issue, onError, onResolve }) {
         value={file}
         variant="compact"
       />
-      <button disabled={!file} onClick={() => onResolve(issue, file)} type="button">
-        Resolve
+      <button disabled={!file || isResolving} onClick={() => onResolve(issue, file)} type="button">
+        {isResolving ? "Resolving..." : "Resolve"}
       </button>
     </div>
   );

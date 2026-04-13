@@ -5,6 +5,10 @@ export async function createIssue(payload) {
   return unwrapResponse(await api.post("/issues", payload));
 }
 
+export async function getIssues(params) {
+  return unwrapResponse(await api.get("/issues", { params }));
+}
+
 export async function getCitizenDashboard() {
   return unwrapResponse(await api.get("/issues/dashboard"));
 }
@@ -40,4 +44,8 @@ export async function supervisorReassign(id) {
 
 export async function supervisorClear(id, payload) {
   return unwrapResponse(await api.post(`/issues/${id}/supervisor-clear`, payload));
+}
+
+export async function linkDuplicate(id) {
+  return unwrapResponse(await api.post(`/issues/${id}/duplicate`));
 }

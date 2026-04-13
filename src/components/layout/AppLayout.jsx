@@ -1,7 +1,9 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { LogOut, ShieldCheck } from "lucide-react";
+import { useEffect, useState } from "react";
 import { ThemeSwitch } from "../ui/ThemeSwitch.jsx";
 import { useAuth } from "../../features/auth/useAuth";
+import { popRouteToast } from "../../lib/toast";
 
 const navByRole = {
   CITIZEN: [
@@ -34,6 +36,13 @@ export function AppLayout() {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
   const links = navByRole[user?.role] || [];
+  const [toastMessage, setToastMessage] = useState(() => popRouteToast() || "");
+
+  useEffect(() => {
+    if (!toastMessage) return undefined;
+    const timer = window.setTimeout(() => setToastMessage(""), 2500);
+    return () => window.clearTimeout(timer);
+  }, [toastMessage]);
 
   function handleLogout() {
     logout();
@@ -42,6 +51,7 @@ export function AppLayout() {
 
   return (
     <div className="shell">
+      {toastMessage && <div className="toast-message" role="status" aria-live="polite">{toastMessage}</div>}
       <aside className="sidebar">
         <div className="brand">
           <ShieldCheck />
