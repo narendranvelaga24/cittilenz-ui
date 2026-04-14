@@ -1,15 +1,56 @@
 import { useQuery } from "@tanstack/react-query";
 import { getAdminDashboard } from "../../api/admin.api";
+import { getRoleIssues } from "../../api/issues.api";
 import { HeroPanel } from "../../components/ui/HeroPanel.jsx";
 import { OpenStreetMapAttribution } from "../../components/ui/OpenStreetMapAttribution.jsx";
 import { StatCard } from "../../components/ui/StatCard.jsx";
+import { useAuth } from "../auth/useAuth";
+
+async function getAdminIssueSummary() {
+  const size = 50;
+  const firstPage = await getRoleIssues("ADMIN", { page: 0, size });
+  const totalPages = Math.max(1, Number(firstPage?.totalPages || 1));
+  const pages = [firstPage];
+
+  if (totalPages > 1) {
+    const remaining = await Promise.all(
+      Array.from({ length: totalPages - 1 }, (_, index) => getRoleIssues("ADMIN", { page: index + 1, size }))
+    );
+    pages.push(...remaining);
+  }
+
+  const allIssues = pages.flatMap((pageData) => pageData?.content || []);
+
+  return allIssues.reduce((summary) => {
+    summary.totalIssues += 1;
+    return summary;
+  }, {
+    totalIssues: 0,
+  });
+}
 
 export function AdminDashboard() {
-  const { data, isLoading } = useQuery({
-    queryKey: ["admin-dashboard"],
+  const { user } = useAuth();
+  const dashboardQuery = useQuery({
+    queryKey: ["admin-dashboard", user?.id],
     queryFn: getAdminDashboard,
-    staleTime: 10 * 60_000,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchInterval: 30_000,
   });
+
+  const summaryQuery = useQuery({
+    queryKey: ["admin-issues-summary", user?.id],
+    queryFn: getAdminIssueSummary,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchInterval: 30_000,
+  });
+
+  const data = { ...(dashboardQuery.data || {}), ...(summaryQuery.data || {}) };
+  const isLoading = dashboardQuery.isLoading && summaryQuery.isLoading;
 
   return (
     <section className="page-stack">

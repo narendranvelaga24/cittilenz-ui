@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getIssueById, getRoleIssues, resolveIssue, startIssue } from "../../api/issues.api";
 import { IssueStatusBadge } from "../../components/issues/IssueStatusBadge.jsx";
@@ -14,6 +14,59 @@ import { formatDate } from "../../lib/format";
 
 function normalizeStatus(status) {
   return String(status || "").trim().toUpperCase();
+}
+
+function statusRank(status) {
+  const order = {
+    SUBMITTED: 1,
+    ASSIGNED: 2,
+    REASSIGNED: 3,
+    IN_PROGRESS: 4,
+    ESCALATED: 5,
+    RESOLVED: 6,
+    REJECTED: 7,
+  };
+  return order[normalizeStatus(status)] || 0;
+}
+
+function lifecycleVersion(issue) {
+  const version = Number(issue?.version);
+  return Number.isFinite(version) ? version : -1;
+}
+
+function isNewerLifecycleState(current, incoming) {
+  if (!current) return true;
+  if (!incoming) return false;
+
+  const currentVersion = lifecycleVersion(current);
+  const incomingVersion = lifecycleVersion(incoming);
+  if (incomingVersion > currentVersion) return true;
+  if (incomingVersion < currentVersion) return false;
+
+  const incomingRank = statusRank(incoming?.status);
+  const currentRank = statusRank(current?.status);
+  return incomingRank >= currentRank;
+}
+
+function mergeCanonicalIssue(row, canonicalIssue) {
+  if (!canonicalIssue) return row;
+  if (!row) return canonicalIssue;
+
+  // If list row is ahead in lifecycle/version, keep it as canonical for this render.
+  if (isNewerLifecycleState(canonicalIssue, row)) {
+    return {
+      ...canonicalIssue,
+      ...row,
+      status: normalizeStatus(row.status) || canonicalIssue.status,
+    };
+  }
+
+  // Canonical issue wins to prevent stale role-list rollback.
+  return {
+    ...row,
+    ...canonicalIssue,
+    status: normalizeStatus(canonicalIssue.status) || row.status,
+  };
 }
 
 function isAssignedToUser(issue, user) {
@@ -200,6 +253,7 @@ export function OfficialIssuesPage({ mode }) {
   const [debouncedWardId, setDebouncedWardId] = useState("");
   const [debouncedDepartmentId, setDebouncedDepartmentId] = useState("");
   const [debouncedReportedBy, setDebouncedReportedBy] = useState("");
+  const [canonicalIssues, setCanonicalIssues] = useState({});
 
   // Debounce filter inputs to prevent excessive API calls per contract
   useEffect(() => {
@@ -238,6 +292,28 @@ export function OfficialIssuesPage({ mode }) {
     setToast({ message, tone });
   }
 
+  const rememberCanonicalIssue = useCallback((issue) => {
+    if (!issue?.id) return;
+
+    setCanonicalIssues((previous) => {
+      const current = previous[issue.id];
+      const incoming = {
+        ...current,
+        ...issue,
+        status: normalizeStatus(issue.status) || current?.status,
+      };
+
+      if (!current || isNewerLifecycleState(current, incoming)) {
+        return {
+          ...previous,
+          [issue.id]: incoming,
+        };
+      }
+
+      return previous;
+    });
+  }, []);
+
   const queryKey = ["role-issues", role, status, debouncedWardId, debouncedDepartmentId, debouncedReportedBy, page];
   const { data, isLoading } = useQuery({
     queryKey,
@@ -250,6 +326,59 @@ export function OfficialIssuesPage({ mode }) {
       size: 10,
     }),
   });
+
+  useEffect(() => {
+    if (role !== "OFFICIAL") return;
+    const rows = data?.content || [];
+    if (!rows.length) return;
+
+    let cancelled = false;
+
+    async function reconcileWithIssueDetails() {
+      const comparisons = await Promise.all(rows.map(async (row) => {
+        try {
+          const detail = await getIssueById(row.id);
+          if (!detail) return null;
+
+          rememberCanonicalIssue(detail);
+
+          const listStatus = normalizeStatus(row.status);
+          const detailStatus = normalizeStatus(detail.status);
+
+          if (!detailStatus || detailStatus === listStatus) return null;
+
+          if (!isNewerLifecycleState(row, detail)) return null;
+
+          return {
+            id: row.id,
+            issue: {
+              ...row,
+              ...detail,
+              status: detailStatus,
+            },
+          };
+        } catch {
+          return null;
+        }
+      }));
+
+      if (cancelled) return;
+
+      const updates = comparisons.filter(Boolean);
+      if (!updates.length) return;
+
+      updates.forEach(({ id, issue }) => {
+        reconcileRoleIssueCaches(queryClient, role, id, issue);
+        updateIssueDetailCache(queryClient, id, issue);
+      });
+    }
+
+    reconcileWithIssueDetails();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [role, data, queryClient, rememberCanonicalIssue]);
 
   const [isResolving, setIsResolving] = useState(false);
 
@@ -269,16 +398,28 @@ export function OfficialIssuesPage({ mode }) {
       return startIssue(issue.id, latestIssue?.version ?? issue.version);
     },
     onSuccess: async (updatedIssue, issue) => {
-      const finalIssue = {
+      const mutationIssue = {
         ...issue,
         ...normalizeIssuePayload(updatedIssue),
         status: "IN_PROGRESS",
       };
 
-      reconcileRoleIssueCaches(queryClient, role, issue.id, finalIssue);
-      updateIssueDetailCache(queryClient, issue.id, finalIssue);
+      let canonicalIssue = mutationIssue;
+      const detailIssue = await getIssueById(issue.id).catch(() => null);
+      if (detailIssue) {
+        canonicalIssue = {
+          ...mutationIssue,
+          ...detailIssue,
+          status: normalizeStatus(detailIssue.status) || "IN_PROGRESS",
+        };
+      }
 
-      if (normalizeStatus(finalIssue?.status) === "IN_PROGRESS") {
+      rememberCanonicalIssue(canonicalIssue);
+
+      reconcileRoleIssueCaches(queryClient, role, issue.id, canonicalIssue);
+      updateIssueDetailCache(queryClient, issue.id, canonicalIssue);
+
+      if (normalizeStatus(canonicalIssue?.status) === "IN_PROGRESS") {
         showToast("Work started.", "success");
       } else {
         showToast("Issue status did not move to in progress. List refreshed.", "warning");
@@ -300,7 +441,11 @@ export function OfficialIssuesPage({ mode }) {
         successMessage: "Work started.",
         showToast,
       });
-      if (recovered) return;
+      if (recovered) {
+        const detailIssue = await getIssueById(issue.id).catch(() => null);
+        if (detailIssue) rememberCanonicalIssue(detailIssue);
+        return;
+      }
 
       restoreLifecycleCaches(queryClient, context?.snapshot, context?.issueId ?? issue.id);
 
@@ -345,16 +490,28 @@ export function OfficialIssuesPage({ mode }) {
       payload.append("version", latestIssue?.version ?? issue.version);
       payload.append("image", file);
       const updatedIssue = await resolveIssue(issue.id, payload);
-      const finalIssue = {
+      const mutationIssue = {
         ...issue,
         ...normalizeIssuePayload(updatedIssue),
         status: "RESOLVED",
       };
 
-      reconcileRoleIssueCaches(queryClient, role, issue.id, finalIssue);
-      updateIssueDetailCache(queryClient, issue.id, finalIssue);
+      let canonicalIssue = mutationIssue;
+      const detailIssue = await getIssueById(issue.id).catch(() => null);
+      if (detailIssue) {
+        canonicalIssue = {
+          ...mutationIssue,
+          ...detailIssue,
+          status: normalizeStatus(detailIssue.status) || "RESOLVED",
+        };
+      }
 
-      if (normalizeStatus(finalIssue?.status) === "RESOLVED") {
+      rememberCanonicalIssue(canonicalIssue);
+
+      reconcileRoleIssueCaches(queryClient, role, issue.id, canonicalIssue);
+      updateIssueDetailCache(queryClient, issue.id, canonicalIssue);
+
+      if (normalizeStatus(canonicalIssue?.status) === "RESOLVED") {
         showToast("Issue resolved.", "success");
       } else {
         showToast("Resolution submitted but status is not resolved yet. List refreshed.", "warning");
@@ -375,7 +532,11 @@ export function OfficialIssuesPage({ mode }) {
         successMessage: "Issue resolved.",
         showToast,
       });
-      if (recovered) return;
+      if (recovered) {
+        const detailIssue = await getIssueById(issue.id).catch(() => null);
+        if (detailIssue) rememberCanonicalIssue(detailIssue);
+        return;
+      }
 
       restoreLifecycleCaches(queryClient, snapshot, issue.id);
 
@@ -393,7 +554,8 @@ export function OfficialIssuesPage({ mode }) {
     }
   }
 
-  const issues = (data?.content || []).filter((issue) => {
+  const mergedIssues = (data?.content || []).map((issue) => mergeCanonicalIssue(issue, canonicalIssues[issue.id]));
+  const issues = mergedIssues.filter((issue) => {
     // For officials: must be assigned to them
     if (role === "OFFICIAL") {
       const isAssigned = isAssignedToUser(issue, user);

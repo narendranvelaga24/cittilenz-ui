@@ -42,6 +42,8 @@ export function IssueDetailPage() {
       setToastMessage("You've been linked to this issue.");
       setError("");
       queryClient.invalidateQueries({ queryKey: ["issue", id] });
+      queryClient.invalidateQueries({ queryKey: ["my-issues"] });
+      queryClient.invalidateQueries({ queryKey: ["citizen-dashboard"] });
     },
     onError: (err) => {
       setError(errorMessage(err));

@@ -10,7 +10,7 @@ export async function getIssues(params) {
 }
 
 export async function getCitizenDashboard() {
-  return unwrapResponse(await api.get("/issues/dashboard"));
+  return unwrapResponse(await api.get("/issues/dashboard", { params: { _ts: Date.now() } }));
 }
 
 export async function getMyIssues(params) {
@@ -23,7 +23,12 @@ export async function getIssueById(id) {
 
 export async function getRoleIssues(role, params) {
   const basePath = role === "ADMIN" ? "/admin/issues" : role === "WARD_SUPERIOR" ? "/superior/issues" : "/official/issues";
-  return unwrapResponse(await api.get(basePath, { params }));
+  return unwrapResponse(await api.get(basePath, {
+    params: {
+      ...(params || {}),
+      _ts: Date.now(),
+    },
+  }));
 }
 
 export async function startIssue(id, version) {

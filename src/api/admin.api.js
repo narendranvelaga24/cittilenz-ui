@@ -2,7 +2,7 @@ import { api } from "./client";
 import { unwrapResponse } from "../lib/apiResponse";
 
 export async function getAdminDashboard() {
-  return unwrapResponse(await api.get("/admin/issues/dashboard"));
+  return unwrapResponse(await api.get("/admin/issues/dashboard", { params: { _ts: Date.now() } }));
 }
 
 export async function getUsers() {

@@ -49,7 +49,10 @@ export function AnalyticsPage() {
       }
       return getSlaAnalytics();
     },
-    staleTime: 5 * 60_000,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchInterval: 30_000,
   });
 
   const { data, isLoading, error } = analyticsQuery;

@@ -8,6 +8,7 @@ import { FileUpload } from "../../components/ui/FileUpload.jsx";
 import { OpenStreetMapAttribution } from "../../components/ui/OpenStreetMapAttribution.jsx";
 import { PageHeader } from "../../components/ui/PageHeader.jsx";
 import { errorMessage } from "../../lib/apiResponse";
+import { useQueryClient } from "@tanstack/react-query";
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
@@ -23,6 +24,7 @@ export function ReportIssuePage() {
   const [loadingStep, setLoadingStep] = useState("");
   const [aiPredictionFailed, setAiPredictionFailed] = useState(false);
   const wardLookupCache = useRef(new Map());
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!toast.message) return;
@@ -185,6 +187,11 @@ export function ReportIssuePage() {
       const created = await createIssue(payload);
       const duplicateMessage = created?.reportCount > 1 ? " Existing issue found, and your report was linked." : "";
       showToast(`Issue submitted successfully.${duplicateMessage}`, "success");
+      await queryClient.invalidateQueries({ queryKey: ["my-issues"] });
+      await queryClient.invalidateQueries({ queryKey: ["citizen-dashboard"] });
+      if (created?.id != null) {
+        queryClient.setQueryData(["issue", String(created.id)], created);
+      }
       setForm({ title: "", description: "" });
       setImage(null);
       setCoords(null);
