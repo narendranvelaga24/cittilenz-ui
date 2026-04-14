@@ -38,8 +38,8 @@ export async function reassignIssue(id) {
   return unwrapResponse(await api.post(`/issues/${id}/reassign`));
 }
 
-export async function supervisorReassign(id) {
-  return unwrapResponse(await api.post(`/issues/${id}/supervisor-reassign`));
+export async function supervisorReassign(id, payload) {
+  return unwrapResponse(await api.post(`/issues/${id}/supervisor-reassign`, payload || {}));
 }
 
 export async function supervisorClear(id, payload) {

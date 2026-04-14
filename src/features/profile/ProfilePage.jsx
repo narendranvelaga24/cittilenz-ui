@@ -4,7 +4,6 @@ import { deactivateAccount, deleteAccount, getUserProfile, changePassword, updat
 import { Alert } from "../../components/ui/Alert.jsx";
 import { PageHeader } from "../../components/ui/PageHeader.jsx";
 import { errorMessage } from "../../lib/apiResponse";
-import { formatDate } from "../../lib/format";
 import { useAuth } from "../auth/useAuth";
 
 export function ProfilePage() {
@@ -22,8 +21,6 @@ export function ProfilePage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [toastMessage, setToastMessage] = useState("");
-  const city = profileUser.city || profileUser.cityName;
-  const createdAt = profileUser.createdAt || profileUser.created_at || profileUser.createdOn || profileUser.createdDate;
 
   useEffect(() => {
     if (!toastMessage) return;
@@ -157,8 +154,6 @@ export function ProfilePage() {
           <dl className="details-list">
             <dt>Username</dt><dd>{user.username}</dd>
             <dt>Role</dt><dd>{user.role}</dd>
-            <dt>City</dt><dd>{city || "Not sent by backend"}</dd>
-            <dt>Created at</dt><dd>{createdAt ? formatDate(createdAt) : "Not sent by backend"}</dd>
           </dl>
           {isCitizen && (
             <div className="action-cell">

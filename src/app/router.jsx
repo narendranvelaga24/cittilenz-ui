@@ -43,6 +43,7 @@ export const router = createBrowserRouter([
             children: [
               { path: "/official/dashboard", element: <OfficialDashboard /> },
               { path: "/official/issues", element: <OfficialIssuesPage /> },
+              { path: "/official/issues/:id", element: <IssueDetailPage /> },
             ],
           },
           {
@@ -50,6 +51,7 @@ export const router = createBrowserRouter([
             children: [
               { path: "/superior/dashboard", element: <SuperiorDashboard /> },
               { path: "/superior/issues", element: <SuperiorIssuesPage /> },
+              { path: "/superior/issues/:id", element: <IssueDetailPage /> },
               { path: "/analytics", element: <AnalyticsPage /> },
             ],
           },

@@ -265,6 +265,22 @@ label {
 	max-width: min(90vw, 320px);
 }
 
+.toast-success {
+	background: color-mix(in srgb, var(--success) 72%, var(--bg));
+}
+
+.toast-warning {
+	background: color-mix(in srgb, var(--warn) 65%, var(--bg));
+}
+
+.toast-danger {
+	background: color-mix(in srgb, var(--danger) 65%, var(--bg));
+}
+
+.toast-info {
+	background: color-mix(in srgb, var(--accent) 58%, var(--bg));
+}
+
 .page-heading {
 	display: flex;
 	flex-wrap: wrap;
@@ -338,7 +354,40 @@ label {
 .details-list dd {
 	margin: 0;
 }
+	text-transform: uppercase;
 
+
+.issue-image-link {
+	display: block;
+	border-radius: var(--radius-sm);
+	overflow: hidden;
+	border: 1px solid var(--line);
+	background: color-mix(in srgb, var(--bg-soft) 80%, transparent);
+}
+
+.issue-image-preview {
+	display: block;
+	width: 100%;
+	max-height: 320px;
+	object-fit: cover;
+}
+
+.contact-stack {
+	display: grid;
+	gap: 0.2rem;
+}
+
+.contact-stack strong {
+	font-size: 0.9rem;
+	line-height: 1.2;
+}
+
+.contact-stack span {
+	font-size: 0.78rem;
+	color: var(--text-muted);
+	line-height: 1.2;
+	word-break: break-word;
+}
 .details-list dt {
 	font-size: 0.8rem;
 	letter-spacing: 0.08em;

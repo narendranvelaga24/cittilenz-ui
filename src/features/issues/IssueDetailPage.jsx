@@ -9,7 +9,16 @@ import { Alert } from "../../components/ui/Alert.jsx";
 import { OpenStreetMapAttribution } from "../../components/ui/OpenStreetMapAttribution.jsx";
 import { PageHeader } from "../../components/ui/PageHeader.jsx";
 import { errorMessage } from "../../lib/apiResponse";
+import { env } from "../../lib/env";
 import { formatDate } from "../../lib/format";
+
+function toAbsoluteAssetUrl(path) {
+  if (!path) return "";
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  const normalizedBase = env.baseUrl.endsWith("/") ? env.baseUrl.slice(0, -1) : env.baseUrl;
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${normalizedBase}${normalizedPath}`;
+}
 
 export function IssueDetailPage() {
   const { id } = useParams();
@@ -45,6 +54,8 @@ export function IssueDetailPage() {
   // Check if current user is citizen and has already reported this issue
   const isCitizen = user?.role === "CITIZEN";
   const canLinkDuplicate = isCitizen && issue && issue.reporterIds && !issue.reporterIds.includes(user?.id);
+  const reportedImageUrl = toAbsoluteAssetUrl(issue.imageUrl || issue.reportedImageUrl || issue.uploadedImageUrl);
+  const resolvedImageUrl = toAbsoluteAssetUrl(issue.resolvedImageUrl || issue.resolutionImageUrl || issue.fixedImageUrl);
 
   return (
     <section className="page-stack">
@@ -59,6 +70,7 @@ export function IssueDetailPage() {
           <dl className="details-list">
             <dt>Ward</dt><dd>{issue.wardName || "Pending"}</dd>
             <dt>Department</dt><dd>{issue.departmentName || "Pending"}</dd>
+            <dt>Type</dt><dd>{issue.issueTypeName || issue.displayName || issue.type || "Not specified"}</dd>
             <dt>Assigned official</dt><dd>{issue.assignedOfficialName || "Not assigned"}</dd>
             <dt>Soft SLA</dt><dd>{formatDate(issue.softSlaDeadline)}</dd>
             <dt>Hard SLA</dt><dd>{formatDate(issue.hardSlaDeadline)}</dd>
@@ -78,6 +90,26 @@ export function IssueDetailPage() {
         <div className="panel">
           <h2>Status timeline</h2>
           <IssueTimeline history={issue.history} status={issue.status} />
+        </div>
+        <div className="panel">
+          <h2>Reported image</h2>
+          {reportedImageUrl ? (
+            <a className="issue-image-link" href={reportedImageUrl} target="_blank" rel="noreferrer">
+              <img className="issue-image-preview" src={reportedImageUrl} alt={`Reported evidence for issue ${issue.id}`} loading="lazy" />
+            </a>
+          ) : (
+            <p>No report image available yet.</p>
+          )}
+        </div>
+        <div className="panel">
+          <h2>Resolution image</h2>
+          {resolvedImageUrl ? (
+            <a className="issue-image-link" href={resolvedImageUrl} target="_blank" rel="noreferrer">
+              <img className="issue-image-preview" src={resolvedImageUrl} alt={`Resolution proof for issue ${issue.id}`} loading="lazy" />
+            </a>
+          ) : (
+            <p>Resolution image will appear once the issue is marked as resolved.</p>
+          )}
         </div>
       </div>
       <OpenStreetMapAttribution />

@@ -1,14 +1,37 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { getRoleIssues, reassignIssue, supervisorClear, supervisorReassign } from "../../api/issues.api";
 import { getDepartments } from "../../api/departments.api";
 import { IssueStatusBadge } from "../../components/issues/IssueStatusBadge.jsx";
-import { Alert } from "../../components/ui/Alert.jsx";
 import { DataTable } from "../../components/ui/DataTable.jsx";
 import { OpenStreetMapAttribution } from "../../components/ui/OpenStreetMapAttribution.jsx";
 import { PageHeader } from "../../components/ui/PageHeader.jsx";
 import { Pagination } from "../../components/ui/Pagination.jsx";
 import { errorMessage } from "../../lib/apiResponse";
+
+function pickFirst(...values) {
+  for (const value of values) {
+    if (value !== undefined && value !== null && String(value).trim() !== "") {
+      return value;
+    }
+  }
+  return "";
+}
+
+function renderContact(name, email, phone, fallbackLabel = "Not available") {
+  const hasAny = Boolean(name || email || phone);
+  if (!hasAny) {
+    return <span className="muted">{fallbackLabel}</span>;
+  }
+  return (
+    <div className="contact-stack">
+      <strong>{name || "N/A"}</strong>
+      <span>{email || "Email not available"}</span>
+      <span>{phone || "Phone not available"}</span>
+    </div>
+  );
+}
 
 export function SuperiorIssuesPage() {
   const [status, setStatus] = useState("ESCALATED");
@@ -34,16 +57,18 @@ export function SuperiorIssuesPage() {
     }, 500);
     return () => clearTimeout(timer);
   }, [reportedBy]);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
-  const [toastMessage, setToastMessage] = useState("");
+  const [toast, setToast] = useState({ message: "", tone: "info" });
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (!toastMessage) return;
-    const timeout = setTimeout(() => setToastMessage(""), 4000);
+    if (!toast.message) return;
+    const timeout = setTimeout(() => setToast({ message: "", tone: "info" }), 4000);
     return () => clearTimeout(timeout);
-  }, [toastMessage]);
+  }, [toast.message]);
+
+  function showToast(message, tone = "info") {
+    setToast({ message, tone });
+  }
   const { data: departments = [] } = useQuery({ queryKey: ["departments"], queryFn: getDepartments, staleTime: 30 * 60_000 });
   const { data, isLoading } = useQuery({
     queryKey: ["superior-issues", status, debouncedDepartmentId, debouncedReportedBy, page],
@@ -56,28 +81,80 @@ export function SuperiorIssuesPage() {
     }),
   });
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["superior-issues"] });
   const reassignMutation = useMutation({
     mutationFn: reassignIssue,
-    onSuccess: () => { setMessage("Escalated issue reassigned."); setToastMessage("Escalated issue reassigned."); invalidate(); },
-    onError: (err) => setError(errorMessage(err)),
+    onSuccess: async (updatedIssue, id) => {
+      queryClient.setQueriesData({ queryKey: ["superior-issues"] }, (current) => {
+        if (!current?.content) return current;
+        return {
+          ...current,
+          content: current.content.map((row) => (
+            row.id === id
+              ? {
+                  ...row,
+                  status: updatedIssue?.status || "REASSIGNED",
+                  requiresSupervisorIntervention: updatedIssue?.requiresSupervisorIntervention ?? false,
+                  version: updatedIssue?.version || row.version,
+                }
+              : row
+          )),
+        };
+      });
+      showToast("Escalated issue reassigned.", "success");
+      await queryClient.refetchQueries({ queryKey: ["superior-issues"], type: "active" });
+    },
+    onError: (err) => showToast(errorMessage(err), "danger"),
   });
   const supervisorReassignMutation = useMutation({
-    mutationFn: supervisorReassign,
-    onSuccess: () => { setMessage("Supervisor reassignment completed."); setToastMessage("Supervisor reassignment completed."); invalidate(); },
-    onError: (err) => setError(errorMessage(err)),
+    mutationFn: ({ id, version }) => supervisorReassign(id, { version }),
+    onSuccess: async (updatedIssue, variables) => {
+      queryClient.setQueriesData({ queryKey: ["superior-issues"] }, (current) => {
+        if (!current?.content) return current;
+        return {
+          ...current,
+          content: current.content.map((row) => (
+            row.id === variables.id
+              ? {
+                  ...row,
+                  status: updatedIssue?.status || row.status,
+                  requiresSupervisorIntervention: updatedIssue?.requiresSupervisorIntervention ?? false,
+                  version: updatedIssue?.version || row.version,
+                }
+              : row
+          )),
+        };
+      });
+      showToast("Supervisor reassignment completed.", "success");
+      await queryClient.refetchQueries({ queryKey: ["superior-issues"], type: "active" });
+    },
+    onError: (err) => showToast(errorMessage(err), "danger"),
   });
 
   async function clearIntervention(issue) {
     const remarks = window.prompt("Enter supervisor remarks");
     if (!remarks) return;
     try {
-      await supervisorClear(issue.id, { version: issue.version, remarks });
-      setMessage("Intervention cleared.");
-      setToastMessage("Intervention cleared.");
-      invalidate();
+      const updatedIssue = await supervisorClear(issue.id, { version: issue.version, remarks });
+      queryClient.setQueriesData({ queryKey: ["superior-issues"] }, (current) => {
+        if (!current?.content) return current;
+        return {
+          ...current,
+          content: current.content.map((row) => (
+            row.id === issue.id
+              ? {
+                  ...row,
+                  status: updatedIssue?.status || row.status,
+                  requiresSupervisorIntervention: false,
+                  version: updatedIssue?.version || row.version,
+                }
+              : row
+          )),
+        };
+      });
+      showToast("Intervention cleared.", "success");
+      await queryClient.refetchQueries({ queryKey: ["superior-issues"], type: "active" });
     } catch (err) {
-      setError(errorMessage(err));
+      showToast(errorMessage(err), "danger");
     }
   }
 
@@ -85,6 +162,26 @@ export function SuperiorIssuesPage() {
   const columns = [
     { key: "title", header: "Issue" },
     { key: "status", header: "Status", render: (issue) => <IssueStatusBadge status={issue.status} /> },
+    {
+      key: "reporterDetails",
+      header: "Reported By",
+      render: (issue) => {
+        const name = pickFirst(issue.reporterName, issue.reportedByName, issue.reportedByFullName, issue.citizenName);
+        const email = pickFirst(issue.reporterEmail, issue.reportedByEmail, issue.citizenEmail);
+        const phone = pickFirst(issue.reporterMobile, issue.reportedByMobile, issue.reporterPhone, issue.citizenMobile);
+        return renderContact(name, email, phone);
+      },
+    },
+    {
+      key: "officialDetails",
+      header: "Working Official",
+      render: (issue) => {
+        const name = pickFirst(issue.assignedOfficialName, issue.currentOfficialName, issue.officialName);
+        const email = pickFirst(issue.assignedOfficialEmail, issue.currentOfficialEmail, issue.officialEmail);
+        const phone = pickFirst(issue.assignedOfficialMobile, issue.currentOfficialMobile, issue.officialMobile);
+        return renderContact(name, email, phone);
+      },
+    },
     { key: "departmentName", header: "Department", render: (issue) => issue.departmentName || "N/A" },
     {
       key: "hardSlaDeadline",
@@ -101,9 +198,11 @@ export function SuperiorIssuesPage() {
       header: "Actions",
       render: (issue) => (
         <div className="action-cell">
+          <Link to={`/superior/issues/${issue.id}`}>View</Link>
           {issue.status === "ESCALATED" && <button disabled={reassignMutation.isPending} onClick={() => reassignMutation.mutate(issue.id)}>{reassignMutation.isPending ? "Reassigning..." : "Reassign"}</button>}
-          {issue.requiresSupervisorIntervention && <button disabled={supervisorReassignMutation.isPending} onClick={() => supervisorReassignMutation.mutate(issue.id)}>{supervisorReassignMutation.isPending ? "Reassigning..." : "Supervisor reassign"}</button>}
-          {issue.requiresSupervisorIntervention && <button onClick={() => clearIntervention(issue)}>Clear</button>}
+          {issue.status === "ASSIGNED" && issue.requiresSupervisorIntervention && <button disabled={supervisorReassignMutation.isPending} onClick={() => supervisorReassignMutation.mutate({ id: issue.id, version: issue.version })}>{supervisorReassignMutation.isPending ? "Reassigning..." : "Supervisor reassign"}</button>}
+          {issue.status === "ASSIGNED" && issue.requiresSupervisorIntervention && <button onClick={() => clearIntervention(issue)}>Clear</button>}
+          {issue.requiresSupervisorIntervention && issue.status !== "ASSIGNED" && <span className="action-note">Intervention flag present, but only ASSIGNED issues can be supervisor-reassigned.</span>}
           {issue.status !== "ESCALATED" && !issue.requiresSupervisorIntervention && <span className="action-note">No action needed</span>}
         </div>
       ),
@@ -112,7 +211,11 @@ export function SuperiorIssuesPage() {
 
   return (
     <section className="page-stack">
-      {toastMessage && <div className="toast-message">{toastMessage}</div>}
+      {toast.message && (
+        <div className={`toast-message toast-${toast.tone}`} role={toast.tone === "danger" ? "alert" : "status"} aria-live="polite">
+          {toast.message}
+        </div>
+      )}
       <PageHeader
         eyebrow="Escalation queue"
         title="Ward issues needing attention"
@@ -143,8 +246,6 @@ export function SuperiorIssuesPage() {
         </div>
         }
       />
-      {message && <Alert tone="success">{message}</Alert>}
-      {error && <Alert tone="danger">{error}</Alert>}
       <DataTable
         caption="Ward superior escalation issues"
         columns={columns}
