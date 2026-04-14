@@ -8,7 +8,6 @@ import { OpenStreetMapAttribution } from "../../components/ui/OpenStreetMapAttri
 import { PageHeader } from "../../components/ui/PageHeader.jsx";
 import { Pagination } from "../../components/ui/Pagination.jsx";
 import { formatDate } from "../../lib/format";
-import { useAuth } from "../auth/useAuth";
 
 function pickFirst(...values) {
   for (const value of values) {
@@ -34,7 +33,6 @@ function renderContact(name, email, phone, fallbackLabel = "Not available") {
 }
 
 export function MyIssuesPage() {
-  const { user } = useAuth();
   const [page, setPage] = useState(0);
   const { data, isLoading } = useQuery({
     queryKey: ["my-issues", page],

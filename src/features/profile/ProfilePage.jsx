@@ -10,12 +10,11 @@ export function ProfilePage() {
   const { refreshUser, logout, user } = useAuth();
   const isCitizen = user.role === "CITIZEN";
   const queryClient = useQueryClient();
-  const { data: profile } = useQuery({
+  useQuery({
     queryKey: ["user-profile"],
     queryFn: getUserProfile,
     enabled: isCitizen,
   });
-  const profileUser = profile || user;
   const [form, setForm] = useState({ fullName: user.fullName || "", email: user.email || "", mobile: user.mobile || "" });
   const [passwordForm, setPasswordForm] = useState({ oldPassword: "", newPassword: "", confirmNewPassword: "" });
   const [message, setMessage] = useState("");
