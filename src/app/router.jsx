@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import { AppLayout } from "../components/layout/AppLayout.jsx";
 import { ProtectedRoute } from "../components/routing/ProtectedRoute.jsx";
 import { AdminDashboard } from "../features/admin/AdminDashboard.jsx";
+import { AdminIssuesPage } from "../features/admin/AdminIssuesPage.jsx";
 import { AdminIssueTypesPage } from "../features/admin/AdminIssueTypesPage.jsx";
 import { AdminUsersPage } from "../features/admin/AdminUsersPage.jsx";
 import { LoginPage } from "../features/auth/LoginPage.jsx";
@@ -61,7 +62,7 @@ export const router = createBrowserRouter([
               { path: "/admin/dashboard", element: <AdminDashboard /> },
               { path: "/admin/users", element: <AdminUsersPage /> },
               { path: "/admin/issue-types", element: <AdminIssueTypesPage /> },
-              { path: "/admin/issues", element: <OfficialIssuesPage mode="admin" /> },
+              { path: "/admin/issues", element: <AdminIssuesPage /> },
               { path: "/admin/analytics", element: <AnalyticsPage /> },
             ],
           },
