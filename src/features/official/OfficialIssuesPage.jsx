@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { getIssueById, getRoleIssues, resolveIssue, startIssue } from "../../api/issues.api";
+import { IssueDetailsDialog } from "../../components/issues/IssueDetailsDialog.jsx";
 import { IssueStatusBadge } from "../../components/issues/IssueStatusBadge.jsx";
 import { DataTable } from "../../components/ui/DataTable.jsx";
 import { FileUpload } from "../../components/ui/FileUpload.jsx";
@@ -254,6 +254,7 @@ export function OfficialIssuesPage({ mode }) {
   const [debouncedDepartmentId, setDebouncedDepartmentId] = useState("");
   const [debouncedReportedBy, setDebouncedReportedBy] = useState("");
   const [canonicalIssues, setCanonicalIssues] = useState({});
+  const [selectedIssue, setSelectedIssue] = useState(null);
 
   // Debounce filter inputs to prevent excessive API calls per contract
   useEffect(() => {
@@ -630,7 +631,11 @@ export function OfficialIssuesPage({ mode }) {
 
         return (
           <div className="action-cell">
-            {role === "OFFICIAL" && <Link to={`/official/issues/${issue.id}`}>View</Link>}
+            {role === "OFFICIAL" && (
+              <button type="button" className="secondary-button" onClick={() => setSelectedIssue(issue)}>
+                View
+              </button>
+            )}
             {role === "OFFICIAL" && issueStatus === "SUBMITTED" && <span className="action-note">Waiting for assignment</span>}
             {role === "OFFICIAL" && issueStatus === "ASSIGNED" && isAssignedToCurrentOfficial && (
               <button disabled={startMutation.isPending} onClick={() => startMutation.mutate(issue)}>{startMutation.isPending ? "Starting..." : "Start"}</button>
@@ -728,6 +733,13 @@ export function OfficialIssuesPage({ mode }) {
       />
       <Pagination page={page} totalPages={data?.totalPages || 1} onPageChange={setPage} />
       <OpenStreetMapAttribution />
+      <IssueDetailsDialog
+        issue={selectedIssue}
+        open={Boolean(selectedIssue)}
+        onOpenChange={(open) => {
+          if (!open) setSelectedIssue(null);
+        }}
+      />
     </section>
   );
 }

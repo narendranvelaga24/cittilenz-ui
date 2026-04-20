@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getIssueById, getMyIssues } from "../../api/issues.api";
+import { IssueDetailsDialog } from "../../components/issues/IssueDetailsDialog.jsx";
 import { IssueStatusBadge } from "../../components/issues/IssueStatusBadge.jsx";
 import { DataTable } from "../../components/ui/DataTable.jsx";
 import { OpenStreetMapAttribution } from "../../components/ui/OpenStreetMapAttribution.jsx";
@@ -86,6 +87,7 @@ function renderContact(name, email, phone, fallbackLabel = "Not available") {
 
 export function MyIssuesPage() {
   const [page, setPage] = useState(0);
+  const [selectedIssue, setSelectedIssue] = useState(null);
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [canonicalIssues, setCanonicalIssues] = useState({});
@@ -193,7 +195,15 @@ export function MyIssuesPage() {
     },
     { key: "departmentName", header: "Department", render: (issue) => issue.departmentName || "Pending" },
     { key: "createdAt", header: "Created", render: (issue) => formatDate(issue.createdAt) },
-    { key: "action", header: "", render: (issue) => <Link to={`/citizen/issues/${issue.id}`}>View</Link> },
+    {
+      key: "action",
+      header: "",
+      render: (issue) => (
+        <button type="button" className="secondary-button" onClick={() => setSelectedIssue(issue)}>
+          View
+        </button>
+      ),
+    },
   ];
 
   return (
@@ -211,6 +221,13 @@ export function MyIssuesPage() {
       />
       <Pagination page={page} totalPages={data?.totalPages || 1} onPageChange={setPage} />
       <OpenStreetMapAttribution />
+      <IssueDetailsDialog
+        issue={selectedIssue}
+        open={Boolean(selectedIssue)}
+        onOpenChange={(open) => {
+          if (!open) setSelectedIssue(null);
+        }}
+      />
     </section>
   );
 }

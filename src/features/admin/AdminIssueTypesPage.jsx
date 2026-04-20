@@ -2,8 +2,19 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { createIssueType, getAdminIssueTypes, setIssueTypeActive, updateIssueType } from "../../api/admin.api";
 import { getDepartments } from "../../api/departments.api";
+import { Button } from "../../components/ui/button.jsx";
 import { DataTable } from "../../components/ui/DataTable.jsx";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog.jsx";
 import { FormField } from "../../components/ui/FormField.jsx";
+import { Input } from "../../components/ui/input.jsx";
+import { Label } from "../../components/ui/label.jsx";
 import { PageHeader } from "../../components/ui/PageHeader.jsx";
 import { Pagination } from "../../components/ui/Pagination.jsx";
 import { errorMessage } from "../../lib/apiResponse";
@@ -147,6 +158,7 @@ export function AdminIssueTypesPage() {
   const visibleTypes = sortedTypes.slice(start, start + PAGE_SIZE);
   const rangeStart = sortedTypes.length ? start + 1 : 0;
   const rangeEnd = Math.min(start + PAGE_SIZE, sortedTypes.length);
+  const editingIssueType = issueTypes.find((issueType) => issueType.id === editingIssueTypeId) || null;
 
   const columns = [
     { key: "name", header: "Type", render: (type) => type.displayName },
@@ -160,49 +172,9 @@ export function AdminIssueTypesPage() {
       header: "Actions",
       render: (type) => (
         <div className="action-cell">
-          {editingIssueTypeId === type.id ? (
-            <>
-              <select value={editForm.departmentId} onChange={(event) => updateEdit("departmentId", event.target.value)}>
-                <option value="">No department</option>
-                {departments.map((dept) => (
-                  <option key={dept.id} value={dept.id}>{dept.name}</option>
-                ))}
-              </select>
-              <input
-                type="number"
-                min={1}
-                placeholder="SLA hours"
-                value={editForm.slaHours}
-                onChange={(event) => updateEdit("slaHours", event.target.value)}
-              />
-              <select value={editForm.active} onChange={(event) => updateEdit("active", event.target.value)}>
-                <option value="">Keep active status</option>
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
-              </select>
-              <select value={editForm.priority} onChange={(event) => updateEdit("priority", event.target.value)}>
-                <option value="">Keep priority</option>
-                <option value="CRITICAL">Critical</option>
-                <option value="HIGH">High</option>
-                <option value="MEDIUM">Medium</option>
-                <option value="LOW">Low</option>
-              </select>
-              <input
-                placeholder="Description"
-                value={editForm.description}
-                onChange={(event) => updateEdit("description", event.target.value)}
-              />
-              <button type="button" onClick={() => saveEdit(type)} disabled={updateMutation.isPending}>
-                {updateMutation.isPending ? "Saving..." : "Save"}
-              </button>
-              <button type="button" onClick={cancelEdit}>Cancel</button>
-            </>
-          ) : null}
-          {editingIssueTypeId !== type.id && (
-            <button type="button" onClick={() => startEdit(type)}>
-              Edit
-            </button>
-          )}
+          <button type="button" onClick={() => startEdit(type)}>
+            Edit
+          </button>
         </div>
       ),
     },
@@ -228,6 +200,106 @@ export function AdminIssueTypesPage() {
         </form>
         <DataTable caption="Issue types" columns={columns} rows={visibleTypes} getRowKey={(type) => type.id} emptyTitle="No issue types found" toolbar={<><strong>Latest issue types</strong><span>{issueTypesFetching ? "Refreshing..." : `Showing ${rangeStart}-${rangeEnd} of ${issueTypes.length}`}</span></>} />
       </div>
+
+      <Dialog
+        open={Boolean(editingIssueType)}
+        onOpenChange={(open) => {
+          if (!open) cancelEdit();
+        }}
+      >
+        <DialogContent className="admin-edit-dialog">
+          <DialogHeader>
+            <DialogTitle>Edit issue type</DialogTitle>
+            <DialogDescription>
+              Update SLA, priority, department, and active state.
+            </DialogDescription>
+          </DialogHeader>
+
+          {editingIssueType && (
+            <div className="admin-edit-grid">
+              <div className="admin-edit-field">
+                <Label>Name</Label>
+                <Input value={editingIssueType.displayName || editingIssueType.name || "-"} disabled />
+              </div>
+
+              <div className="admin-edit-field">
+                <Label htmlFor="admin-issue-type-department">Department</Label>
+                <select
+                  id="admin-issue-type-department"
+                  value={editForm.departmentId}
+                  onChange={(event) => updateEdit("departmentId", event.target.value)}
+                >
+                  <option value="">No department</option>
+                  {departments.map((dept) => (
+                    <option key={dept.id} value={dept.id}>{dept.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="admin-edit-field">
+                <Label htmlFor="admin-issue-type-sla">SLA hours</Label>
+                <Input
+                  id="admin-issue-type-sla"
+                  type="number"
+                  min={1}
+                  value={editForm.slaHours}
+                  onChange={(event) => updateEdit("slaHours", event.target.value)}
+                />
+              </div>
+
+              <div className="admin-edit-field">
+                <Label htmlFor="admin-issue-type-priority">Priority</Label>
+                <select
+                  id="admin-issue-type-priority"
+                  value={editForm.priority}
+                  onChange={(event) => updateEdit("priority", event.target.value)}
+                >
+                  <option value="">Keep priority</option>
+                  <option value="CRITICAL">Critical</option>
+                  <option value="HIGH">High</option>
+                  <option value="MEDIUM">Medium</option>
+                  <option value="LOW">Low</option>
+                </select>
+              </div>
+
+              <div className="admin-edit-field">
+                <Label htmlFor="admin-issue-type-active">Active</Label>
+                <select
+                  id="admin-issue-type-active"
+                  value={editForm.active}
+                  onChange={(event) => updateEdit("active", event.target.value)}
+                >
+                  <option value="">Keep active status</option>
+                  <option value="true">Active</option>
+                  <option value="false">Inactive</option>
+                </select>
+              </div>
+
+              <div className="admin-edit-field admin-edit-field-full">
+                <Label htmlFor="admin-issue-type-description">Description</Label>
+                <textarea
+                  id="admin-issue-type-description"
+                  rows={4}
+                  value={editForm.description}
+                  onChange={(event) => updateEdit("description", event.target.value)}
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={cancelEdit}>Cancel</Button>
+            <Button
+              type="button"
+              onClick={() => editingIssueType && saveEdit(editingIssueType)}
+              disabled={!editingIssueType || updateMutation.isPending}
+            >
+              {updateMutation.isPending ? "Saving..." : "Save changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Pagination page={safePage} totalPages={totalPages} onPageChange={setPage} />
     </section>
   );

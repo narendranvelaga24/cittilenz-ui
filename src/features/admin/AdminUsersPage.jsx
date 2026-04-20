@@ -4,8 +4,19 @@ import { createStaffUser, deleteStaffUser, getUsers, resetStaffPassword, updateS
 import { getDepartments } from "../../api/departments.api";
 import { getWards } from "../../api/wards.api";
 import { Alert } from "../../components/ui/Alert.jsx";
+import { Button } from "../../components/ui/button.jsx";
 import { DataTable } from "../../components/ui/DataTable.jsx";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog.jsx";
 import { FormField } from "../../components/ui/FormField.jsx";
+import { Input } from "../../components/ui/input.jsx";
+import { Label } from "../../components/ui/label.jsx";
 import { PageHeader } from "../../components/ui/PageHeader.jsx";
 import { Pagination } from "../../components/ui/Pagination.jsx";
 import { errorMessage } from "../../lib/apiResponse";
@@ -16,6 +27,7 @@ export function AdminUsersPage() {
   const queryClient = useQueryClient();
   const [form, setForm] = useState({ username: "", fullName: "", email: "", mobile: "", password: "", role: "OFFICIAL", wardId: "", departmentId: "" });
   const [editingUserId, setEditingUserId] = useState(null);
+  const [viewingUserId, setViewingUserId] = useState(null);
   const [editForm, setEditForm] = useState({ fullName: "", email: "", mobile: "", wardId: "", departmentId: "", isActive: "" });
   const [toastMessage, setToastMessage] = useState("");
   const [message, setMessage] = useState("");
@@ -232,6 +244,9 @@ export function AdminUsersPage() {
   const visibleUsers = sortedUsers.slice(start, start + PAGE_SIZE);
   const rangeStart = sortedUsers.length ? start + 1 : 0;
   const rangeEnd = Math.min(start + PAGE_SIZE, sortedUsers.length);
+  const editingUser = users.find((user) => user.id === editingUserId) || null;
+  const viewingUser = users.find((user) => user.id === viewingUserId) || null;
+
   const columns = [
     { key: "fullName", header: "Name" },
     { key: "role", header: "Role" },
@@ -250,78 +265,12 @@ export function AdminUsersPage() {
     {
       key: "actions",
       header: "Actions",
-      render: (row) => {
-        if (editingUserId !== row.id) {
-          return (
-            <div className="action-cell">
-              <button type="button" onClick={() => startEdit(row)}>Edit</button>
-            </div>
-          );
-        }
-
-        return (
-          <div className="action-cell">
-            <input
-              placeholder="Full name"
-              value={editForm.fullName}
-              onChange={(event) => updateEdit("fullName", event.target.value)}
-            />
-            <input
-              type="email"
-              placeholder="Email"
-              value={editForm.email}
-              onChange={(event) => updateEdit("email", event.target.value)}
-            />
-            <input
-              placeholder="Mobile"
-              value={editForm.mobile}
-              onChange={(event) => updateEdit("mobile", event.target.value)}
-            />
-            <select value={editForm.wardId} onChange={(event) => updateEdit("wardId", event.target.value)}>
-              <option value="">No ward</option>
-              {wards.map((ward) => <option key={ward.id} value={ward.id}>{ward.wardName}</option>)}
-            </select>
-            {row.role === "OFFICIAL" && (
-              <select value={editForm.departmentId} onChange={(event) => updateEdit("departmentId", event.target.value)}>
-                <option value="">No department</option>
-                {departments.map((dept) => <option key={dept.id} value={dept.id}>{dept.name}</option>)}
-              </select>
-            )}
-            <select value={editForm.isActive} onChange={(event) => updateEdit("isActive", event.target.value)}>
-              <option value="">Active status</option>
-              <option value="true">true</option>
-              <option value="false">false</option>
-            </select>
-
-            <button type="button" onClick={() => saveEdit(row)} disabled={updateMutation.isPending}>
-              {updateMutation.isPending ? "Saving..." : "Save"}
-            </button>
-            <button type="button" onClick={cancelEdit}>Cancel</button>
-
-            {["OFFICIAL", "WARD_SUPERIOR"].includes(row.role) && (
-              <button
-                type="button"
-                onClick={() => {
-                  const password = window.prompt("Enter new password (min 8 characters)");
-                  if (!password || password.length < 8) return;
-                  resetPasswordMutation.mutate({ id: row.id, password });
-                }}
-              >
-                Reset password
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => {
-                if (!window.confirm(`Delete user ${row.username || row.fullName}? This cannot be undone.`)) return;
-                deleteMutation.mutate(row.id);
-              }}
-            >
-              Delete
-            </button>
-          </div>
-        );
-      },
+      render: (row) => (
+        <div className="action-cell">
+          <button type="button" onClick={() => setViewingUserId(row.id)}>View</button>
+          <button type="button" onClick={() => startEdit(row)}>Edit</button>
+        </div>
+      ),
     },
   ];
 
@@ -355,6 +304,185 @@ export function AdminUsersPage() {
           toolbar={<><strong>Latest users</strong><span>{usersFetching ? "Refreshing..." : `Showing ${rangeStart}-${rangeEnd} of ${users.length}`}</span></>}
         />
       </div>
+
+      <Dialog
+        open={Boolean(viewingUser)}
+        onOpenChange={(open) => {
+          if (!open) setViewingUserId(null);
+        }}
+      >
+        <DialogContent className="admin-view-dialog">
+          <DialogHeader>
+            <DialogTitle>{viewingUser?.fullName || "User details"}</DialogTitle>
+            <DialogDescription>
+              Read-only user details snapshot.
+            </DialogDescription>
+          </DialogHeader>
+
+          {viewingUser && (
+            <div className="dialog-body">
+              <dl className="details-list">
+                <dt>User ID</dt>
+                <dd>{viewingUser.id}</dd>
+
+                <dt>Username</dt>
+                <dd>{viewingUser.username || "N/A"}</dd>
+
+                <dt>Full Name</dt>
+                <dd>{viewingUser.fullName || "N/A"}</dd>
+
+                <dt>Email</dt>
+                <dd>{viewingUser.email || "N/A"}</dd>
+
+                <dt>Mobile</dt>
+                <dd>{viewingUser.mobile || "N/A"}</dd>
+
+                <dt>Role</dt>
+                <dd>{viewingUser.role || "N/A"}</dd>
+
+                <dt>Ward ID</dt>
+                <dd>{viewingUser.wardId ?? viewingUser.ward_id ?? "N/A"}</dd>
+
+                <dt>Department ID</dt>
+                <dd>{viewingUser.departmentId ?? viewingUser.department_id ?? "N/A"}</dd>
+
+                <dt>Active</dt>
+                <dd>{activeState(viewingUser) === null ? "N/A" : activeState(viewingUser) ? "Yes" : "No"}</dd>
+              </dl>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(editingUser)}
+        onOpenChange={(open) => {
+          if (!open) cancelEdit();
+        }}
+      >
+        <DialogContent className="admin-edit-dialog">
+          <DialogHeader>
+            <DialogTitle>Edit user</DialogTitle>
+            <DialogDescription>
+              Update profile and assignment details for this staff account.
+            </DialogDescription>
+          </DialogHeader>
+
+          {editingUser && (
+            <div className="admin-edit-grid">
+              <div className="admin-edit-field">
+                <Label htmlFor="admin-user-full-name">Full name</Label>
+                <Input
+                  id="admin-user-full-name"
+                  value={editForm.fullName}
+                  onChange={(event) => updateEdit("fullName", event.target.value)}
+                />
+              </div>
+
+              <div className="admin-edit-field">
+                <Label htmlFor="admin-user-email">Email</Label>
+                <Input
+                  id="admin-user-email"
+                  type="email"
+                  value={editForm.email}
+                  onChange={(event) => updateEdit("email", event.target.value)}
+                />
+              </div>
+
+              <div className="admin-edit-field">
+                <Label htmlFor="admin-user-mobile">Mobile</Label>
+                <Input
+                  id="admin-user-mobile"
+                  value={editForm.mobile}
+                  onChange={(event) => updateEdit("mobile", event.target.value)}
+                />
+              </div>
+
+              <div className="admin-edit-field">
+                <Label htmlFor="admin-user-ward">Ward</Label>
+                <select
+                  id="admin-user-ward"
+                  value={editForm.wardId}
+                  onChange={(event) => updateEdit("wardId", event.target.value)}
+                >
+                  <option value="">No ward</option>
+                  {wards.map((ward) => <option key={ward.id} value={ward.id}>{ward.wardName}</option>)}
+                </select>
+              </div>
+
+              {editingUser.role === "OFFICIAL" && (
+                <div className="admin-edit-field">
+                  <Label htmlFor="admin-user-department">Department</Label>
+                  <select
+                    id="admin-user-department"
+                    value={editForm.departmentId}
+                    onChange={(event) => updateEdit("departmentId", event.target.value)}
+                  >
+                    <option value="">No department</option>
+                    {departments.map((dept) => <option key={dept.id} value={dept.id}>{dept.name}</option>)}
+                  </select>
+                </div>
+              )}
+
+              <div className="admin-edit-field">
+                <Label htmlFor="admin-user-active">Active status</Label>
+                <select
+                  id="admin-user-active"
+                  value={editForm.isActive}
+                  onChange={(event) => updateEdit("isActive", event.target.value)}
+                >
+                  <option value="">Keep active status</option>
+                  <option value="true">Active</option>
+                  <option value="false">Inactive</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={cancelEdit}>Cancel</Button>
+            <Button
+              type="button"
+              onClick={() => editingUser && saveEdit(editingUser)}
+              disabled={!editingUser || updateMutation.isPending}
+            >
+              {updateMutation.isPending ? "Saving..." : "Save changes"}
+            </Button>
+
+            {editingUser && ["OFFICIAL", "WARD_SUPERIOR"].includes(editingUser.role) && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  const password = window.prompt("Enter new password (min 8 characters)");
+                  if (!password || password.length < 8) return;
+                  resetPasswordMutation.mutate({ id: editingUser.id, password });
+                }}
+              >
+                Reset password
+              </Button>
+            )}
+
+            {editingUser && (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => {
+                  if (!window.confirm(`Delete user ${editingUser.username || editingUser.fullName}? This cannot be undone.`)) return;
+                  deleteMutation.mutate(editingUser.id, {
+                    onSuccess: () => {
+                      cancelEdit();
+                    },
+                  });
+                }}
+              >
+                Delete user
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Pagination page={safePage} totalPages={totalPages} onPageChange={setPage} />
     </section>
   );

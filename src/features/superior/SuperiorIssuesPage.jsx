@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { getIssueById, getRoleIssues, reassignIssue, supervisorClear, supervisorReassign } from "../../api/issues.api";
 import { getDepartments } from "../../api/departments.api";
+import { IssueDetailsDialog } from "../../components/issues/IssueDetailsDialog.jsx";
 import { IssueStatusBadge } from "../../components/issues/IssueStatusBadge.jsx";
 import { DataTable } from "../../components/ui/DataTable.jsx";
 import { OpenStreetMapAttribution } from "../../components/ui/OpenStreetMapAttribution.jsx";
@@ -88,6 +88,7 @@ export function SuperiorIssuesPage() {
   const [departmentId, setDepartmentId] = useState("");
   const [reportedBy, setReportedBy] = useState("");
   const [page, setPage] = useState(0);
+  const [selectedIssue, setSelectedIssue] = useState(null);
   const [debouncedDepartmentId, setDebouncedDepartmentId] = useState("");
   const [debouncedReportedBy, setDebouncedReportedBy] = useState("");
 
@@ -339,7 +340,9 @@ export function SuperiorIssuesPage() {
       header: "Actions",
       render: (issue) => (
         <div className="action-cell">
-          <Link to={`/superior/issues/${issue.id}`}>View</Link>
+          <button type="button" className="secondary-button" onClick={() => setSelectedIssue(issue)}>
+            View
+          </button>
           {issue.status === "ESCALATED" && <button disabled={reassignMutation.isPending} onClick={() => reassignMutation.mutate(issue.id)}>{reassignMutation.isPending ? "Reassigning..." : "Reassign"}</button>}
           {issue.status === "ASSIGNED" && issue.requiresSupervisorIntervention && <button disabled={supervisorReassignMutation.isPending} onClick={() => supervisorReassignMutation.mutate({ id: issue.id, version: issue.version })}>{supervisorReassignMutation.isPending ? "Reassigning..." : "Supervisor reassign"}</button>}
           {issue.status === "ASSIGNED" && issue.requiresSupervisorIntervention && <button onClick={() => clearIntervention(issue)}>Clear</button>}
@@ -398,6 +401,13 @@ export function SuperiorIssuesPage() {
       />
       <Pagination page={page} totalPages={data?.totalPages || 1} onPageChange={setPage} />
       <OpenStreetMapAttribution />
+      <IssueDetailsDialog
+        issue={selectedIssue}
+        open={Boolean(selectedIssue)}
+        onOpenChange={(open) => {
+          if (!open) setSelectedIssue(null);
+        }}
+      />
     </section>
   );
 }
