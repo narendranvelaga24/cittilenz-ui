@@ -206,9 +206,9 @@ export function SuperiorIssuesPage() {
   }, [data, queryClient, rememberCanonicalIssue]);
 
   const reassignMutation = useMutation({
-    mutationFn: reassignIssue,
-    onSuccess: async (updatedIssue, id) => {
-      const detailIssue = await getIssueById(id).catch(() => null);
+    mutationFn: ({ id, version }) => reassignIssue(id, { version }),
+    onSuccess: async (updatedIssue, variables) => {
+      const detailIssue = await getIssueById(variables.id).catch(() => null);
       const canonicalIssue = {
         ...updatedIssue,
         ...(detailIssue || {}),
@@ -221,7 +221,7 @@ export function SuperiorIssuesPage() {
         return {
           ...current,
           content: current.content.map((row) => (
-            String(row.id) === String(id)
+            String(row.id) === String(variables.id)
               ? {
                   ...row,
                   ...canonicalIssue,
@@ -343,7 +343,7 @@ export function SuperiorIssuesPage() {
           <button type="button" className="secondary-button" onClick={() => setSelectedIssue(issue)}>
             View
           </button>
-          {issue.status === "ESCALATED" && <button disabled={reassignMutation.isPending} onClick={() => reassignMutation.mutate(issue.id)}>{reassignMutation.isPending ? "Reassigning..." : "Reassign"}</button>}
+          {issue.status === "ESCALATED" && <button disabled={reassignMutation.isPending} onClick={() => reassignMutation.mutate({ id: issue.id, version: issue.version })}>{reassignMutation.isPending ? "Reassigning..." : "Reassign"}</button>}
           {issue.status === "ASSIGNED" && issue.requiresSupervisorIntervention && <button disabled={supervisorReassignMutation.isPending} onClick={() => supervisorReassignMutation.mutate({ id: issue.id, version: issue.version })}>{supervisorReassignMutation.isPending ? "Reassigning..." : "Supervisor reassign"}</button>}
           {issue.status === "ASSIGNED" && issue.requiresSupervisorIntervention && <button onClick={() => clearIntervention(issue)}>Clear</button>}
           {issue.requiresSupervisorIntervention && issue.status !== "ASSIGNED" && <span className="action-note">Intervention flag present, but only ASSIGNED issues can be supervisor-reassigned.</span>}

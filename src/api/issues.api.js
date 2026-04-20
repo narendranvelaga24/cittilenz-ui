@@ -39,8 +39,8 @@ export async function resolveIssue(id, payload) {
   return unwrapResponse(await api.post(`/issues/${id}/resolve`, payload));
 }
 
-export async function reassignIssue(id) {
-  return unwrapResponse(await api.post(`/issues/${id}/reassign`));
+export async function reassignIssue(id, payload) {
+  return unwrapResponse(await api.post(`/issues/${id}/reassign`, payload || {}));
 }
 
 export async function supervisorReassign(id, payload) {
