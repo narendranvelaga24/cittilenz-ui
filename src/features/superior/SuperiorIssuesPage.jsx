@@ -303,10 +303,23 @@ export function SuperiorIssuesPage() {
   const issues = (data?.content || []).map((issue) => mergeCanonicalIssue(issue, canonicalIssues[issue.id]));
   const columns = [
     { key: "title", header: "Issue" },
-    { key: "status", header: "Status", render: (issue) => <IssueStatusBadge status={issue.status} /> },
+    { key: "status", header: "Status", accessor: (issue) => normalizeStatus(issue.status), render: (issue) => <IssueStatusBadge status={issue.status} /> },
     {
       key: "reporterDetails",
       header: "Reported By",
+      searchValue: (issue) => [
+        issue.reporterName,
+        issue.reportedByName,
+        issue.reportedByFullName,
+        issue.citizenName,
+        issue.reporterEmail,
+        issue.reportedByEmail,
+        issue.citizenEmail,
+        issue.reporterMobile,
+        issue.reportedByMobile,
+        issue.reporterPhone,
+        issue.citizenMobile,
+      ].filter(Boolean).join(" "),
       render: (issue) => {
         const name = pickFirst(issue.reporterName, issue.reportedByName, issue.reportedByFullName, issue.citizenName);
         const email = pickFirst(issue.reporterEmail, issue.reportedByEmail, issue.citizenEmail);
@@ -317,6 +330,17 @@ export function SuperiorIssuesPage() {
     {
       key: "officialDetails",
       header: "Working Official",
+      searchValue: (issue) => [
+        issue.assignedOfficialName,
+        issue.currentOfficialName,
+        issue.officialName,
+        issue.assignedOfficialEmail,
+        issue.currentOfficialEmail,
+        issue.officialEmail,
+        issue.assignedOfficialMobile,
+        issue.currentOfficialMobile,
+        issue.officialMobile,
+      ].filter(Boolean).join(" "),
       render: (issue) => {
         const name = pickFirst(issue.assignedOfficialName, issue.currentOfficialName, issue.officialName);
         const email = pickFirst(issue.assignedOfficialEmail, issue.currentOfficialEmail, issue.officialEmail);
@@ -324,20 +348,23 @@ export function SuperiorIssuesPage() {
         return renderContact(name, email, phone);
       },
     },
-    { key: "departmentName", header: "Department", render: (issue) => issue.departmentName || "N/A" },
+    { key: "departmentName", header: "Department", accessor: (issue) => issue.departmentName || "N/A", render: (issue) => issue.departmentName || "N/A" },
     {
       key: "hardSlaDeadline",
       header: "SLA Status",
+      accessor: (issue) => issue.hardSlaBreached ? "Breached" : issue.softSlaBreached ? "At risk" : "On track",
       render: (issue) => {
         if (issue.hardSlaBreached) return <span className="sla-breached">Breached</span>;
         if (issue.softSlaBreached) return <span className="sla-warning">At risk</span>;
         return <span className="sla-on-track">On track</span>;
       },
     },
-    { key: "requiresSupervisorIntervention", header: "Intervention", render: (issue) => issue.requiresSupervisorIntervention ? "Required" : "No" },
+    { key: "requiresSupervisorIntervention", header: "Intervention", accessor: (issue) => issue.requiresSupervisorIntervention ? "Required" : "No", render: (issue) => issue.requiresSupervisorIntervention ? "Required" : "No" },
     {
       key: "actions",
       header: "Actions",
+      enableSort: false,
+      searchable: false,
       render: (issue) => (
         <div className="action-cell">
           <button type="button" className="secondary-button" onClick={() => setSelectedIssue(issue)}>
@@ -363,7 +390,17 @@ export function SuperiorIssuesPage() {
       <PageHeader
         eyebrow="Escalation queue"
         title="Ward issues needing attention"
-        actions={
+      />
+      <DataTable
+        caption="Ward superior escalation issues"
+        columns={columns}
+        rows={issues}
+        getRowKey={(issue) => issue.id}
+        isLoading={isLoading}
+        loadingText="Loading escalations..."
+        emptyTitle="No issues need intervention"
+        searchPlaceholder="Search issues, department, reporter, official..."
+        filters={
         <div className="page-actions">
           <select value={status} onChange={(event) => { setStatus(event.target.value); setPage(0); }}>
             <option value="ESCALATED">Escalated</option>
@@ -389,15 +426,6 @@ export function SuperiorIssuesPage() {
           />
         </div>
         }
-      />
-      <DataTable
-        caption="Ward superior escalation issues"
-        columns={columns}
-        rows={issues}
-        getRowKey={(issue) => issue.id}
-        isLoading={isLoading}
-        loadingText="Loading escalations..."
-        emptyTitle="No issues need intervention"
       />
       <Pagination page={page} totalPages={data?.totalPages || 1} onPageChange={setPage} />
       <OpenStreetMapAttribution />

@@ -255,16 +255,20 @@ export function AdminUsersPage() {
     {
       key: "wardId",
       header: "Ward ID",
+      accessor: (user) => user.wardId ?? user.ward_id ?? "-",
       render: (user) => user.wardId ?? user.ward_id ?? "-",
     },
     {
       key: "departmentId",
       header: "Department ID",
+      accessor: (user) => user.departmentId ?? user.department_id ?? "-",
       render: (user) => user.departmentId ?? user.department_id ?? "-",
     },
     {
       key: "actions",
       header: "Actions",
+      enableSort: false,
+      searchable: false,
       render: (row) => (
         <div className="action-cell">
           <button type="button" onClick={() => setViewingUserId(row.id)}>View</button>
@@ -301,6 +305,7 @@ export function AdminUsersPage() {
           rows={visibleUsers}
           getRowKey={(user) => user.id}
           emptyTitle="No users found"
+          searchPlaceholder="Search users, email, mobile, role..."
           toolbar={<><strong>Latest users</strong><span>{usersFetching ? "Refreshing..." : `Showing ${rangeStart}-${rangeEnd} of ${users.length}`}</span></>}
         />
       </div>

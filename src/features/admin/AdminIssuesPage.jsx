@@ -79,15 +79,29 @@ export function AdminIssuesPage() {
 
   const columns = [
     { key: "title", header: "Issue" },
-    { key: "status", header: "Status", render: (issue) => <IssueStatusBadge status={issue.status} /> },
+    { key: "status", header: "Status", accessor: (issue) => issue.status, render: (issue) => <IssueStatusBadge status={issue.status} /> },
     {
       key: "issueType",
       header: "Type",
+      accessor: (issue) => issue.issueTypeName || issue.displayName || issue.type || "Uncategorized",
       render: (issue) => issue.issueTypeName || issue.displayName || issue.type || "Uncategorized",
     },
     {
       key: "reporterDetails",
       header: "Reported By",
+      searchValue: (issue) => [
+        issue.reporterName,
+        issue.reportedByName,
+        issue.reportedByFullName,
+        issue.citizenName,
+        issue.reporterEmail,
+        issue.reportedByEmail,
+        issue.citizenEmail,
+        issue.reporterMobile,
+        issue.reportedByMobile,
+        issue.reporterPhone,
+        issue.citizenMobile,
+      ].filter(Boolean).join(" "),
       render: (issue) => {
         const reporterName = pickFirst(issue.reporterName, issue.reportedByName, issue.reportedByFullName, issue.citizenName);
         const reporterEmail = pickFirst(issue.reporterEmail, issue.reportedByEmail, issue.citizenEmail);
@@ -98,6 +112,17 @@ export function AdminIssuesPage() {
     {
       key: "officialDetails",
       header: "Official",
+      searchValue: (issue) => [
+        issue.assignedOfficialName,
+        issue.currentOfficialName,
+        issue.officialName,
+        issue.assignedOfficialEmail,
+        issue.currentOfficialEmail,
+        issue.officialEmail,
+        issue.assignedOfficialMobile,
+        issue.currentOfficialMobile,
+        issue.officialMobile,
+      ].filter(Boolean).join(" "),
       render: (issue) => {
         const assignedName = pickFirst(issue.assignedOfficialName, issue.currentOfficialName, issue.officialName);
         const assignedEmail = pickFirst(issue.assignedOfficialEmail, issue.currentOfficialEmail, issue.officialEmail);
@@ -109,6 +134,8 @@ export function AdminIssuesPage() {
     {
       key: "actions",
       header: "Actions",
+      enableSort: false,
+      searchable: false,
       render: (issue) => (
         <div className="action-cell">
           <button type="button" className="secondary-button" onClick={() => setSelectedIssue(issue)}>
@@ -124,7 +151,18 @@ export function AdminIssuesPage() {
       <PageHeader
         eyebrow="Admin issue view"
         title="All issues"
-        actions={
+      />
+
+      <DataTable
+        caption="Admin issues"
+        columns={columns}
+        rows={rows}
+        getRowKey={(issue) => issue.id}
+        emptyTitle="No issues found"
+        isLoading={isFetching}
+        searchPlaceholder="Search issues, status, type, reporter, official..."
+        toolbar={<span>{isFetching ? "Refreshing..." : `Showing ${rows.length} of ${data?.totalElements ?? 0}`}</span>}
+        filters={
           <div className="page-actions">
             <select value={status} onChange={(event) => { setStatus(event.target.value); setPage(0); }}>
               <option value="">All statuses</option>
@@ -159,16 +197,6 @@ export function AdminIssuesPage() {
             />
           </div>
         }
-      />
-
-      <DataTable
-        caption="Admin issues"
-        columns={columns}
-        rows={rows}
-        getRowKey={(issue) => issue.id}
-        emptyTitle="No issues found"
-        isLoading={isFetching}
-        toolbar={<span>{isFetching ? "Refreshing..." : `Showing ${rows.length} of ${data?.totalElements ?? 0}`}</span>}
       />
 
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />

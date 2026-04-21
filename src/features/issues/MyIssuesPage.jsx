@@ -173,10 +173,22 @@ export function MyIssuesPage() {
   const issues = (data?.content || []).map((issue) => mergeCanonicalIssue(issue, canonicalIssues[issue.id]));
   const columns = [
     { key: "title", header: "Issue" },
-    { key: "status", header: "Status", render: (issue) => <IssueStatusBadge status={issue.status} /> },
+    { key: "status", header: "Status", accessor: (issue) => normalizeStatus(issue.status), render: (issue) => <IssueStatusBadge status={issue.status} /> },
     {
       key: "officialDetails",
       header: "Assigned/Resolved Official",
+      searchValue: (issue) => [
+        issue.assignedOfficialName,
+        issue.currentOfficialName,
+        issue.officialName,
+        issue.assignedOfficialEmail,
+        issue.currentOfficialEmail,
+        issue.officialEmail,
+        issue.resolvedByOfficialName,
+        issue.resolverName,
+        issue.resolvedByOfficialEmail,
+        issue.resolverEmail,
+      ].filter(Boolean).join(" "),
       render: (issue) => {
         const assignedName = pickFirst(issue.assignedOfficialName, issue.currentOfficialName, issue.officialName);
         const assignedEmail = pickFirst(issue.assignedOfficialEmail, issue.currentOfficialEmail, issue.officialEmail);
@@ -193,11 +205,13 @@ export function MyIssuesPage() {
         );
       },
     },
-    { key: "departmentName", header: "Department", render: (issue) => issue.departmentName || "Pending" },
-    { key: "createdAt", header: "Created", render: (issue) => formatDate(issue.createdAt) },
+    { key: "departmentName", header: "Department", accessor: (issue) => issue.departmentName || "Pending", render: (issue) => issue.departmentName || "Pending" },
+    { key: "createdAt", header: "Created", sortValue: (issue) => issue.createdAt ? new Date(issue.createdAt).getTime() : 0, render: (issue) => formatDate(issue.createdAt) },
     {
       key: "action",
       header: "",
+      enableSort: false,
+      searchable: false,
       render: (issue) => (
         <button type="button" className="secondary-button" onClick={() => setSelectedIssue(issue)}>
           View
@@ -218,6 +232,7 @@ export function MyIssuesPage() {
         loadingText="Loading issues..."
         emptyTitle="No issues reported yet"
         emptyDescription="Create your first report to start tracking civic work."
+        searchPlaceholder="Search your issues, status, official..."
       />
       <Pagination page={page} totalPages={data?.totalPages || 1} onPageChange={setPage} />
       <OpenStreetMapAttribution />

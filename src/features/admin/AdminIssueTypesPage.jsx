@@ -161,15 +161,17 @@ export function AdminIssueTypesPage() {
   const editingIssueType = issueTypes.find((issueType) => issueType.id === editingIssueTypeId) || null;
 
   const columns = [
-    { key: "name", header: "Type", render: (type) => type.displayName },
+    { key: "name", header: "Type", accessor: (type) => type.displayName || type.name, render: (type) => type.displayName },
     { key: "departmentName", header: "Department" },
     { key: "priority", header: "Priority" },
-    { key: "slaHours", header: "SLA", render: (type) => `${type.slaHours}h` },
-    { key: "description", header: "Description", render: (type) => type.description || "-" },
-    { key: "active", header: "Active", render: (type) => (type.active ? "Yes" : "No") },
+    { key: "slaHours", header: "SLA", accessor: (type) => type.slaHours, render: (type) => `${type.slaHours}h` },
+    { key: "description", header: "Description", accessor: (type) => type.description || "-", render: (type) => type.description || "-" },
+    { key: "active", header: "Active", accessor: (type) => (type.active ? "Yes" : "No"), render: (type) => (type.active ? "Yes" : "No") },
     {
       key: "actions",
       header: "Actions",
+      enableSort: false,
+      searchable: false,
       render: (type) => (
         <div className="action-cell">
           <button type="button" onClick={() => startEdit(type)}>
@@ -198,7 +200,15 @@ export function AdminIssueTypesPage() {
           <FormField label="Description"><textarea rows={4} value={form.description} onChange={(event) => update("description", event.target.value)} /></FormField>
           <button className="primary-button">Create issue type</button>
         </form>
-        <DataTable caption="Issue types" columns={columns} rows={visibleTypes} getRowKey={(type) => type.id} emptyTitle="No issue types found" toolbar={<><strong>Latest issue types</strong><span>{issueTypesFetching ? "Refreshing..." : `Showing ${rangeStart}-${rangeEnd} of ${issueTypes.length}`}</span></>} />
+        <DataTable
+          caption="Issue types"
+          columns={columns}
+          rows={visibleTypes}
+          getRowKey={(type) => type.id}
+          emptyTitle="No issue types found"
+          searchPlaceholder="Search issue types, department, priority..."
+          toolbar={<><strong>Latest issue types</strong><span>{issueTypesFetching ? "Refreshing..." : `Showing ${rangeStart}-${rangeEnd} of ${issueTypes.length}`}</span></>}
+        />
       </div>
 
       <Dialog

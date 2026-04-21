@@ -571,15 +571,17 @@ export function OfficialIssuesPage({ mode }) {
   });
   const columns = [
     { key: "title", header: "Issue" },
-    { key: "status", header: "Status", render: (issue) => <IssueStatusBadge status={issue.status} /> },
+    { key: "status", header: "Status", accessor: (issue) => normalizeStatus(issue.status), render: (issue) => <IssueStatusBadge status={issue.status} /> },
     {
       key: "issueType",
       header: "Type",
+      accessor: (issue) => issue.issueTypeName || issue.displayName || issue.type || "Uncategorized",
       render: (issue) => issue.issueTypeName || issue.displayName || issue.type || "Uncategorized",
     },
     {
       key: "reporterDetails",
       header: "Reported By",
+      searchValue: (issue) => pickFirst(issue.reporterName, issue.reportedByName, issue.reportedByFullName, issue.citizenName),
       render: (issue) => {
         const reporterName = pickFirst(issue.reporterName, issue.reportedByName, issue.reportedByFullName, issue.citizenName);
         return reporterName ? <strong>{reporterName}</strong> : <span className="muted">Not available</span>;
@@ -591,6 +593,16 @@ export function OfficialIssuesPage({ mode }) {
     columns.push({
       key: "officialDetails",
       header: "Official",
+      searchValue: (issue) => [
+        issue.assignedOfficialName,
+        issue.currentOfficialName,
+        issue.officialName,
+        issue.resolvedByOfficialName,
+        issue.resolverName,
+        issue.assignedOfficialEmail,
+        issue.currentOfficialEmail,
+        issue.officialEmail,
+      ].filter(Boolean).join(" "),
       render: (issue) => {
         const assignedName = pickFirst(issue.assignedOfficialName, issue.currentOfficialName, issue.officialName);
         const assignedEmail = pickFirst(issue.assignedOfficialEmail, issue.currentOfficialEmail, issue.officialEmail);
@@ -608,12 +620,13 @@ export function OfficialIssuesPage({ mode }) {
   }
 
   if (role === "ADMIN") {
-    columns.push({ key: "wardName", header: "Ward", render: (issue) => issue.wardName || "N/A" });
+    columns.push({ key: "wardName", header: "Ward", accessor: (issue) => issue.wardName || "N/A", render: (issue) => issue.wardName || "N/A" });
   }
 
   columns.push({
     key: "hardSlaDeadline",
     header: "SLA",
+    sortValue: (issue) => issue.hardSlaDeadline ? new Date(issue.hardSlaDeadline).getTime() : 0,
     render: (issue) => {
       const text = formatDate(issue.hardSlaDeadline);
       const isBreached = issue.hardSlaBreached ? "breached" : "on-track";
@@ -625,6 +638,8 @@ export function OfficialIssuesPage({ mode }) {
     columns.push({
       key: "actions",
       header: "Actions",
+      enableSort: false,
+      searchable: false,
       render: (issue) => {
         const issueStatus = normalizeStatus(issue.status);
         const isAssignedToCurrentOfficial = isAssignedToUser(issue, user);
@@ -666,7 +681,17 @@ export function OfficialIssuesPage({ mode }) {
       <PageHeader
         eyebrow={role === "ADMIN" ? "Admin issue view" : "Official work queue"}
         title={role === "ADMIN" ? "All issues" : "Official issues"}
-        actions={
+      />
+      <DataTable
+        caption={role === "ADMIN" ? "All reported issues" : showResolvedByMe ? "Issues resolved by you" : "Official assigned issues"}
+        columns={columns}
+        rows={issues}
+        getRowKey={(issue) => issue.id}
+        isLoading={isLoading}
+        loadingText="Loading issues..."
+        emptyTitle="No matching issues"
+        searchPlaceholder="Search issues, status, type, reporter..."
+        filters={
         <div className="page-actions">
           <select value={status} onChange={(event) => { setStatus(event.target.value); setPage(0); }}>
             <option value="">All statuses</option>
@@ -716,20 +741,11 @@ export function OfficialIssuesPage({ mode }) {
             placeholder="Reported by user id"
             value={reportedBy}
             onChange={(event) => {
-              setReportedBy(event.target.value.replace(/[^0-9]/g, ""));
+            setReportedBy(event.target.value.replace(/[^0-9]/g, ""));
             }}
           />
         </div>
         }
-      />
-      <DataTable
-        caption={role === "ADMIN" ? "All reported issues" : showResolvedByMe ? "Issues resolved by you" : "Official assigned issues"}
-        columns={columns}
-        rows={issues}
-        getRowKey={(issue) => issue.id}
-        isLoading={isLoading}
-        loadingText="Loading issues..."
-        emptyTitle="No matching issues"
       />
       <Pagination page={page} totalPages={data?.totalPages || 1} onPageChange={setPage} />
       <OpenStreetMapAttribution />
