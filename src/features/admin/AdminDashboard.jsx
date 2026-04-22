@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { getAdminDashboard } from "../../api/admin.api";
 import { getRoleIssues } from "../../api/issues.api";
+import { DashboardIdentity } from "../../components/ui/DashboardIdentity.jsx";
 import { HeroPanel } from "../../components/ui/HeroPanel.jsx";
 import { OpenStreetMapAttribution } from "../../components/ui/OpenStreetMapAttribution.jsx";
 import { StatCard } from "../../components/ui/StatCard.jsx";
@@ -54,6 +55,7 @@ export function AdminDashboard() {
 
   return (
     <section className="page-stack">
+      <DashboardIdentity role={user?.role} />
       <HeroPanel
         eyebrow="Admin dashboard"
         title="System-wide civic operations."

@@ -83,6 +83,7 @@ export function DataTable({
   }, [columns, currentSearchValue, rows]);
 
   const displayedRows = useMemo(() => sortRows(filteredRows, activeSortColumn, currentSortState.direction), [activeSortColumn, currentSortState.direction, filteredRows]);
+  const tableMinWidth = `${Math.max(760, shownColumns.length * 160)}px`;
 
   function updateSearch(nextValue) {
     if (onSearchChange) {
@@ -161,7 +162,7 @@ export function DataTable({
       {isLoading ? (
         <div className="table-loading">{loadingText}</div>
       ) : (
-        <div className="table-scroll-shell">
+        <div className="table-scroll-shell" style={{ "--table-min-width": tableMinWidth }}>
           <table aria-label={ariaLabel}>
             {caption && <caption>{caption}</caption>}
             <thead>

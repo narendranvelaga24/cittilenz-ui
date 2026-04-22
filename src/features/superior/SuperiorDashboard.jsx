@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { getSuperiorDashboard } from "../../api/dashboards.api";
 import { getRoleIssues } from "../../api/issues.api";
+import { DashboardIdentity } from "../../components/ui/DashboardIdentity.jsx";
 import { HeroPanel } from "../../components/ui/HeroPanel.jsx";
 import { OpenStreetMapAttribution } from "../../components/ui/OpenStreetMapAttribution.jsx";
 import { StatCard } from "../../components/ui/StatCard.jsx";
@@ -59,6 +60,7 @@ export function SuperiorDashboard() {
 
   return (
     <section className="page-stack">
+      <DashboardIdentity role={user?.role} />
       <HeroPanel
         eyebrow="Ward superior dashboard"
         title="Monitor escalations in your ward."

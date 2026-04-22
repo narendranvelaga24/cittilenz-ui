@@ -1,5 +1,5 @@
 import { Moon, Sun } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useThemeMode } from "./useThemeMode.js";
 
 const themes = [
   { id: "light", label: "Light", hint: "F6/F4/00", icon: Sun },
@@ -7,17 +7,7 @@ const themes = [
 ];
 
 export function ThemeSwitch() {
-  const [theme, setTheme] = useState(() => {
-    const stored = localStorage.getItem("cittilenz_theme");
-    if (stored === "porcelain") return "light";
-    if (stored === "noir" || stored === "civic-ink") return "dark";
-    return stored || "light";
-  });
-
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-    localStorage.setItem("cittilenz_theme", theme);
-  }, [theme]);
+  const { setTheme, theme } = useThemeMode();
 
   return (
     <div className="theme-switch" aria-label="Theme selector">
