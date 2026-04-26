@@ -1,4 +1,3 @@
-import { Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { registerCitizen } from "../../api/auth.api";
@@ -7,6 +6,8 @@ import { Alert } from "../../components/ui/Alert.jsx";
 import { ToastNotification } from "../../components/ui/ToastNotification.jsx";
 import { errorMessage } from "../../lib/apiResponse";
 import { pushRouteToast } from "../../lib/toast";
+
+const LOGO_SRC = "/logo.png";
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -108,7 +109,7 @@ export function RegisterPage() {
           <div className="auth-illustration-header">
             <div className="auth-brand-chip">
               <span className="auth-brand-mark auth-brand-mark-dark">
-                <Sparkles className="auth-brand-icon auth-brand-icon-light" />
+                <img alt="Cittilenz logo" className="auth-brand-logo" height="28" src={LOGO_SRC} width="28" />
               </span>
               <span>Cittilenz</span>
             </div>
@@ -121,7 +122,7 @@ export function RegisterPage() {
           <div className="auth-form-panel auth-form-panel-wide">
             <div className="auth-mobile-brand">
               <div className="auth-brand-mark auth-brand-mark-light">
-                <Sparkles className="auth-brand-icon auth-brand-icon-dark" />
+                <img alt="Cittilenz logo" className="auth-brand-logo" height="28" src={LOGO_SRC} width="28" />
               </div>
               <span>Cittilenz</span>
             </div>

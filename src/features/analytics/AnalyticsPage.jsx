@@ -7,6 +7,7 @@ import { getWards } from "../../api/wards.api";
 import { Alert } from "../../components/ui/Alert.jsx";
 import { PageHeader } from "../../components/ui/PageHeader.jsx";
 import { StatCard } from "../../components/ui/StatCard.jsx";
+import { errorMessage } from "../../lib/apiResponse";
 import { formatPercent } from "../../lib/format";
 import { useAuth } from "../auth/useAuth";
 
@@ -130,7 +131,7 @@ export function AnalyticsPage() {
         </label>
       </div>
       {!dateRangeIsValid && mode === "filter" && <Alert tone="danger">From date must be earlier than or equal to To date.</Alert>}
-      {error && <Alert tone="danger">{error.message}</Alert>}
+      {error && <Alert tone="danger">{errorMessage(error)}</Alert>}
       <div className="stats-grid">
         <StatCard label="Total issues" value={isLoading ? "..." : data?.totalIssues || 0} />
         <StatCard label="SLA compliance" value={isLoading ? "..." : formatPercent(data?.slaCompliancePercentage)} tone="green" />

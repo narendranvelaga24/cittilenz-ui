@@ -2,16 +2,53 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { createIssue } from "../../api/issues.api";
 import { getIssueTypes } from "../../api/issueTypes.api";
-import { predictIssue } from "../../api/ai.api";
+import { predictIssue, predictIssueDirect } from "../../api/ai.api";
 import { lookupWard } from "../../api/wards.api";
 import { FileUpload } from "../../components/ui/FileUpload.jsx";
 import { OpenStreetMapAttribution } from "../../components/ui/OpenStreetMapAttribution.jsx";
 import { PageHeader } from "../../components/ui/PageHeader.jsx";
 import { ToastNotification } from "../../components/ui/ToastNotification.jsx";
 import { errorMessage } from "../../lib/apiResponse";
+import { env } from "../../lib/env";
 import { useQueryClient } from "@tanstack/react-query";
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+
+function normalizeIssueTypeName(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replaceAll("_", " ")
+    .replaceAll("-", " ")
+    .replace(/\s+/g, " ");
+}
+
+function findIssueTypeByPrediction(issueTypes, predictionName) {
+  const normalizedPrediction = normalizeIssueTypeName(predictionName);
+  if (!normalizedPrediction) return null;
+
+  return issueTypes.find((type) => {
+    const candidates = [
+      type?.normalizedName,
+      type?.displayName,
+      type?.name,
+    ];
+
+    return candidates.some((candidate) => normalizeIssueTypeName(candidate) === normalizedPrediction);
+  }) || null;
+}
+
+function isRecoverableAiError(error) {
+  const status = Number(error?.response?.status || 0);
+  const message = errorMessage(error).toLowerCase();
+
+  if (status >= 500) return true;
+  if (!status && /network error|timeout|service unavailable|failed to fetch|load failed/.test(message)) {
+    return true;
+  }
+
+  return message.includes("ai service unavailable");
+}
 
 export function ReportIssuePage() {
   const [form, setForm] = useState({ title: "", description: "" });
@@ -101,7 +138,24 @@ export function ReportIssuePage() {
     }
     setLoadingStep("ai");
     try {
-      const result = await predictIssue(image);
+      let result;
+
+      try {
+        result = await predictIssue(image);
+      } catch (backendError) {
+        if (!env.aiUrl || !isRecoverableAiError(backendError)) {
+          throw backendError;
+        }
+
+        const directPrediction = await predictIssueDirect(image);
+        const matchedIssueType = findIssueTypeByPrediction(issueTypes, directPrediction?.issue);
+
+        result = {
+          ...directPrediction,
+          issueTypeId: matchedIssueType?.id ?? null,
+          autoSelected: Boolean(matchedIssueType?.id) && Number(directPrediction?.confidence ?? 0) >= 0.7,
+        };
+      }
 
       if (!result || typeof result !== "object") {
         throw new Error("AI service returned invalid response.");
@@ -111,9 +165,10 @@ export function ReportIssuePage() {
       }
 
       const confidence = Number(result.confidence ?? 0);
-      const mappedIssueTypeId = result.issueTypeId ?? null;
+      const fallbackIssueType = findIssueTypeByPrediction(issueTypes, result.issue);
+      const mappedIssueTypeId = result.issueTypeId ?? fallbackIssueType?.id ?? null;
       const matchedIssueType = issueTypes.find((type) => String(type.id) === String(mappedIssueTypeId));
-      const shouldAutoSelect = Boolean(mappedIssueTypeId) && confidence >= 0.7;
+      const shouldAutoSelect = result.autoSelected ?? (Boolean(mappedIssueTypeId) && confidence >= 0.7);
 
       setPrediction({
         issue: result.issue,

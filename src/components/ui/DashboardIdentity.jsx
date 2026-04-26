@@ -1,12 +1,14 @@
-import { ShieldCheck } from "lucide-react";
+import { formatRoleLabel } from "../../lib/branding";
+
+const LOGO_SRC = "/logo.png";
 
 export function DashboardIdentity({ role }) {
-  const roleLabel = role ? role.replace("_", " ") : "Dashboard";
+  const roleLabel = formatRoleLabel(role);
 
   return (
     <div className="dashboard-identity">
       <span className="dashboard-identity-mark" aria-hidden="true">
-        <ShieldCheck size={22} strokeWidth={1.7} />
+        <img alt="" className="brand-logo" height="30" src={LOGO_SRC} width="30" />
       </span>
       <div>
         <strong>Cittilenz</strong>

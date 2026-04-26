@@ -1,9 +1,11 @@
-import { ArrowRight, Building2, Camera, MapPin, ShieldCheck, Sparkles, TimerReset } from "lucide-react";
+import { ArrowRight, Building2, Camera, MapPin, Sparkles, TimerReset } from "lucide-react";
 import { useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { ThemeSwitch } from "../../components/ui/ThemeSwitch.jsx";
 import { getHomeForRole } from "../../lib/roles";
 import { useAuth } from "../auth/useAuth";
+
+const LOGO_SRC = "/logo.png";
 
 const steps = [
   {
@@ -81,7 +83,9 @@ export function LandingPage() {
     <main className="landing-page">
       <header className="landing-nav fade-in">
         <Link className="landing-logo" to="/">
-          <ShieldCheck size={22} />
+          <span className="landing-logo-mark">
+            <img alt="Cittilenz logo" className="brand-logo" height="30" src={LOGO_SRC} width="30" />
+          </span>
           Cittilenz
         </Link>
         <nav>

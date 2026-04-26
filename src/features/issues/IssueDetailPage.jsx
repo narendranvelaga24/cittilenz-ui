@@ -44,9 +44,16 @@ export function IssueDetailPage() {
 
   const linkDuplicateMutation = useMutation({
     mutationFn: () => linkDuplicate(id),
-    onSuccess: () => {
-      setMessage("You've been linked to this issue. Future updates will notify you.");
-      setToastMessage("You've been linked to this issue.");
+    onSuccess: (updatedIssue) => {
+      const previousCount = Number(issue?.reportCount || 0);
+      const nextCount = Number(updatedIssue?.reportCount || previousCount);
+      const alreadyLinked = nextCount <= previousCount;
+      const nextMessage = alreadyLinked
+        ? "You are already linked to this issue."
+        : "You've been linked to this issue. Future updates will notify you.";
+
+      setMessage(nextMessage);
+      setToastMessage(nextMessage);
       setError("");
       queryClient.invalidateQueries({ queryKey: ["issue", id] });
       queryClient.invalidateQueries({ queryKey: ["my-issues"] });
@@ -62,7 +69,14 @@ export function IssueDetailPage() {
 
   // Check if current user is citizen and has already reported this issue
   const isCitizen = user?.role === "CITIZEN";
-  const canLinkDuplicate = isCitizen && issue && issue.reporterIds && !issue.reporterIds.includes(user?.id);
+  const reportedByCurrentUser = Array.isArray(issue?.reporterIds)
+    ? issue.reporterIds.includes(user?.id)
+    : Boolean(
+        issue?.reportedById != null && user?.id != null
+          ? Number(issue.reportedById) === Number(user.id)
+          : issue?.reportedByName && user?.fullName && issue.reportedByName === user.fullName,
+      );
+  const canLinkDuplicate = isCitizen && issue && !reportedByCurrentUser;
   const reportedImageUrl = toAbsoluteAssetUrl(issue.imageUrl || issue.reportedImageUrl || issue.uploadedImageUrl);
   const resolvedImageUrl = toAbsoluteAssetUrl(issue.resolvedImageUrl || issue.resolutionImageUrl || issue.fixedImageUrl);
   const safeReportedImageUrl = isSafeAssetUrl(reportedImageUrl) ? reportedImageUrl : "";

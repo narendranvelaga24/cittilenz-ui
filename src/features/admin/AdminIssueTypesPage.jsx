@@ -29,6 +29,7 @@ export function AdminIssueTypesPage() {
   const [toast, setToast] = useState({ message: "", tone: "info" });
   const [editingIssueTypeId, setEditingIssueTypeId] = useState(null);
   const [editForm, setEditForm] = useState({ departmentId: "", slaHours: "", priority: "", description: "", active: "" });
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [page, setPage] = useState(0);
   const { data: departments = [] } = useQuery({ queryKey: ["departments"], queryFn: getDepartments, staleTime: 30 * 60_000 });
   const { data: issueTypes = [], isFetching: issueTypesFetching } = useQuery({ queryKey: ["admin-issue-types"], queryFn: getAdminIssueTypes, staleTime: 10 * 60_000 });
@@ -43,22 +44,23 @@ export function AdminIssueTypesPage() {
     setToast({ message, tone });
   }
 
+  function upsertIssueTypeInCache(nextIssueType) {
+    queryClient.setQueryData(["admin-issue-types"], (current = []) => {
+      const rows = Array.isArray(current) ? current : [];
+      const nextRows = [nextIssueType, ...rows.filter((row) => row.id !== nextIssueType.id)];
+      return nextRows.sort((first, second) => Number(second.id || 0) - Number(first.id || 0));
+    });
+  }
+
   const mutation = useMutation({
     mutationFn: createIssueType,
-    onSuccess: () => {
+    onSuccess: (createdIssueType) => {
+      if (createdIssueType?.id) {
+        upsertIssueTypeInCache(createdIssueType);
+      }
       showToast("Issue type created.", "success");
       setIsCreateIssueTypeDialogOpen(false);
       setForm({ name: "", departmentId: "", slaHours: 24, priority: "MEDIUM", description: "" });
-      queryClient.invalidateQueries({ queryKey: ["admin-issue-types"] });
-    },
-    onError: (err) => showToast(errorMessage(err), "danger"),
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, payload }) => updateIssueType(id, payload),
-    onSuccess: () => {
-      showToast("Issue type updated.", "success");
-      queryClient.invalidateQueries({ queryKey: ["admin-issue-types"] });
     },
     onError: (err) => showToast(errorMessage(err), "danger"),
   });
@@ -129,19 +131,38 @@ export function AdminIssueTypesPage() {
       return;
     }
 
+    setIsSavingEdit(true);
     try {
+      let nextIssueType = { ...issueType };
+
       if (Object.keys(payload).length) {
-        await updateIssueType(issueType.id, payload);
+        const updatedIssueType = await updateIssueType(issueType.id, payload);
+        nextIssueType = {
+          ...nextIssueType,
+          ...updatedIssueType,
+        };
       }
       if (activeChanged) {
         await setIssueTypeActive(issueType.id, nextActive);
+        nextIssueType.active = nextActive;
       }
+
+      if (payload.departmentId != null) {
+        nextIssueType.departmentId = payload.departmentId;
+        nextIssueType.departmentName = departments.find((department) => department.id === payload.departmentId)?.name || nextIssueType.departmentName;
+      }
+      if (payload.slaHours != null) nextIssueType.slaHours = payload.slaHours;
+      if (payload.priority) nextIssueType.priority = payload.priority;
+      if (payload.description !== undefined) nextIssueType.description = payload.description;
+
+      upsertIssueTypeInCache(nextIssueType);
       showToast("Issue type updated.", "success");
-      queryClient.invalidateQueries({ queryKey: ["admin-issue-types"] });
       setEditingIssueTypeId(null);
       setEditForm({ departmentId: "", slaHours: "", priority: "", description: "", active: "" });
     } catch (error) {
       showToast(errorMessage(error), "danger");
+    } finally {
+      setIsSavingEdit(false);
     }
   }
 
@@ -334,9 +355,9 @@ export function AdminIssueTypesPage() {
             <Button
               type="button"
               onClick={() => editingIssueType && saveEdit(editingIssueType)}
-              disabled={!editingIssueType || updateMutation.isPending}
+              disabled={!editingIssueType || isSavingEdit}
             >
-              {updateMutation.isPending ? "Saving..." : "Save changes"}
+              {isSavingEdit ? "Saving..." : "Save changes"}
             </Button>
           </DialogFooter>
         </DialogContent>

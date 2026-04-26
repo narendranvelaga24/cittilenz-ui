@@ -94,8 +94,9 @@ function isResolvedByUser(issue, user) {
     return resolvedName === user.fullName;
   }
 
-  // No resolved-by information available → not by this user
-  return false;
+  // Backend only exposes the assigned official today, and only the assigned
+  // official is allowed to resolve the issue.
+  return isAssignedToUser(issue, user);
 }
 
 function pickFirst(...values) {

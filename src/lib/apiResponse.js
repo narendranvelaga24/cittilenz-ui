@@ -6,6 +6,15 @@ export function unwrapResponse(response) {
   return body.data;
 }
 
+function validationMessage(data) {
+  if (!data || typeof data !== "object" || Array.isArray(data)) return "";
+  const messages = Object.values(data)
+    .filter((value) => typeof value === "string" && value.trim() !== "");
+  return messages[0] || "";
+}
+
 export function errorMessage(error) {
-  return error?.response?.data?.message || error?.message || "Something went wrong";
+  const body = error?.response?.data;
+  const fieldMessage = validationMessage(body?.data);
+  return fieldMessage || body?.message || error?.message || "Something went wrong";
 }

@@ -18,11 +18,14 @@ import {
 import { createElement, useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "../../lib/utils";
+import { formatRoleLabel } from "../../lib/branding";
 import { useAuth } from "../../features/auth/useAuth";
 import { popRouteToast } from "../../lib/toast";
 import { Dock } from "../ui/Dock.jsx";
 import { ToastNotification } from "../ui/ToastNotification.jsx";
 import { useThemeMode } from "../ui/useThemeMode.js";
+
+const LOGO_SRC = "/logo.png";
 
 const navByRole = {
   CITIZEN: [
@@ -56,11 +59,6 @@ const sidebarVariants = {
   closed: { width: "3.05rem" },
 };
 
-const labelVariants = {
-  open: { display: "inline", opacity: 1, x: 0 },
-  closed: { opacity: 0, x: -10, transitionEnd: { display: "none" } },
-};
-
 const sidebarTransition = {
   type: "tween",
   ease: "easeOut",
@@ -68,7 +66,6 @@ const sidebarTransition = {
 };
 
 const MotionAside = motion.aside;
-const MotionSpan = motion.span;
 
 function NavGlassFilter() {
   return (
@@ -90,7 +87,7 @@ function isPathActive(pathname, path) {
   return pathname === path || pathname.startsWith(`${path}/`);
 }
 
-function DesktopSidebar({ isDarkTheme, links, onLogout, onThemeToggle }) {
+function DesktopSidebar({ isDarkTheme, links, onLogout, onThemeToggle, role }) {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const ThemeIcon = isDarkTheme ? Sun : Moon;
 
@@ -104,6 +101,17 @@ function DesktopSidebar({ isDarkTheme, links, onLogout, onThemeToggle }) {
       transition={sidebarTransition}
       variants={sidebarVariants}
     >
+      <div className="sidebar-brand-shell">
+        <div className="sidebar-brand" title="Cittilenz">
+          <span className="sidebar-brand-mark">
+            <img alt="Cittilenz logo" className="brand-logo" height="36" src={LOGO_SRC} width="36" />
+          </span>
+          <div className="sidebar-brand-copy">
+            <strong>Cittilenz</strong>
+            <span>{formatRoleLabel(role)}</span>
+          </div>
+        </div>
+      </div>
       <nav aria-label="Primary navigation" className="sidebar-nav">
         {links.map(({ icon: Icon, label, path }) => (
           <NavLink
@@ -113,24 +121,18 @@ function DesktopSidebar({ isDarkTheme, links, onLogout, onThemeToggle }) {
             to={path}
           >
             {createElement(Icon, { size: 18, strokeWidth: 1.8 })}
-            <MotionSpan className="sidebar-link-label" variants={labelVariants}>
-              {label}
-            </MotionSpan>
+            <span className="sidebar-link-label">{label}</span>
           </NavLink>
         ))}
       </nav>
       <div className="sidebar-actions">
         <button className="sidebar-link sidebar-action" onClick={onThemeToggle} title={isDarkTheme ? "Use light theme" : "Use dark theme"} type="button">
           {createElement(ThemeIcon, { size: 18, strokeWidth: 1.8 })}
-          <MotionSpan className="sidebar-link-label" variants={labelVariants}>
-            {isDarkTheme ? "Light mode" : "Dark mode"}
-          </MotionSpan>
+          <span className="sidebar-link-label">{isDarkTheme ? "Light mode" : "Dark mode"}</span>
         </button>
         <button className="sidebar-link sidebar-action" onClick={onLogout} title="Logout" type="button">
           <LogOut size={18} strokeWidth={1.8} />
-          <MotionSpan className="sidebar-link-label" variants={labelVariants}>
-            Logout
-          </MotionSpan>
+          <span className="sidebar-link-label">Logout</span>
         </button>
       </div>
     </MotionAside>
@@ -207,7 +209,7 @@ export function AppLayout() {
     <div className="shell">
       <NavGlassFilter />
       <ToastNotification message={toastMessage} role="status" ariaLive="polite" />
-      <DesktopSidebar isDarkTheme={isDarkTheme} links={links} onLogout={handleLogout} onThemeToggle={toggleTheme} />
+      <DesktopSidebar isDarkTheme={isDarkTheme} links={links} onLogout={handleLogout} onThemeToggle={toggleTheme} role={user?.role} />
       <main className="main-panel">
         <Outlet />
       </main>

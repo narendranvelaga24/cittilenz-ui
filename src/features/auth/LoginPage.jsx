@@ -1,4 +1,4 @@
-import { Eye, EyeOff, Sparkles } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatedCharactersPanel } from "../../components/auth/AnimatedCharactersPanel.jsx";
@@ -8,6 +8,8 @@ import { errorMessage } from "../../lib/apiResponse";
 import { getHomeForRole } from "../../lib/roles";
 import { popRouteToast, pushRouteToast } from "../../lib/toast";
 import { useAuth } from "./useAuth";
+
+const LOGO_SRC = "/logo.png";
 
 export function LoginPage() {
   const { login } = useAuth();
@@ -79,7 +81,7 @@ export function LoginPage() {
           <div className="auth-illustration-header">
             <div className="auth-brand-chip">
               <span className="auth-brand-mark auth-brand-mark-dark">
-                <Sparkles className="auth-brand-icon auth-brand-icon-light" />
+                <img alt="Cittilenz logo" className="auth-brand-logo" height="28" src={LOGO_SRC} width="28" />
               </span>
               <span>Cittilenz</span>
             </div>
@@ -92,7 +94,7 @@ export function LoginPage() {
           <div className="auth-form-panel">
             <div className="auth-mobile-brand">
               <div className="auth-brand-mark auth-brand-mark-light">
-                <Sparkles className="auth-brand-icon auth-brand-icon-dark" />
+                <img alt="Cittilenz logo" className="auth-brand-logo" height="28" src={LOGO_SRC} width="28" />
               </div>
               <span>Cittilenz</span>
             </div>

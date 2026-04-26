@@ -1022,6 +1022,7 @@ label {
 	border-radius: 0.6rem;
 	display: grid;
 	place-items: center;
+	flex: 0 0 auto;
 }
 
 .auth-brand-mark-dark {
@@ -1032,17 +1033,10 @@ label {
 	background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
-.auth-brand-icon {
-	width: 1rem;
-	height: 1rem;
-}
-
-.auth-brand-icon-light {
-	color: var(--accent-contrast);
-}
-
-.auth-brand-icon-dark {
-	color: var(--accent);
+.auth-brand-logo {
+	display: block;
+	width: 1.65rem;
+	height: 1.65rem;
 }
 
 .auth-mobile-brand {
@@ -1560,6 +1554,74 @@ label {
 	backdrop-filter: blur(18px) saturate(130%) url("#nav-liquid-glass");
 }
 
+.sidebar-brand-shell {
+	margin-bottom: 0.5rem;
+	padding-bottom: 0.5rem;
+	border-bottom: 1px solid var(--nav-line);
+}
+
+.sidebar-brand {
+	min-height: 4.35rem;
+	display: flex;
+	align-items: center;
+	gap: 0.78rem;
+	padding: 0.35rem 0.25rem;
+	justify-content: flex-start;
+}
+
+.sidebar-brand-mark {
+	width: 2.35rem;
+	height: 2.35rem;
+	border-radius: 0.8rem;
+	display: inline-grid;
+	place-items: center;
+	flex: 0 0 2.35rem;
+	background: color-mix(in srgb, #ffffff 90%, transparent);
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text) 10%, transparent);
+}
+
+.brand-logo {
+	display: block;
+	border-radius: 0.5rem;
+}
+
+.sidebar-brand-copy {
+	display: grid;
+	gap: 0.12rem;
+	min-width: 0;
+	max-width: 9rem;
+	overflow: hidden;
+	transition:
+		opacity 180ms ease,
+		transform 180ms ease,
+		max-width 180ms ease;
+}
+
+.sidebar-brand-copy strong {
+	font-size: 1.02rem;
+	line-height: 1.05;
+	color: var(--nav-text);
+}
+
+.sidebar-brand-copy span {
+	font-size: 0.68rem;
+	line-height: 1;
+	letter-spacing: 0.15em;
+	text-transform: uppercase;
+	color: var(--nav-muted);
+}
+
+.sidebar.is-collapsed .sidebar-brand {
+	justify-content: flex-start;
+	padding-inline: 0.28rem;
+}
+
+.sidebar.is-collapsed .sidebar-brand-copy {
+	opacity: 0;
+	transform: translateX(-8px);
+	max-width: 0;
+}
+
 .sidebar-nav {
 	display: flex;
 	flex: 1;
@@ -1586,11 +1648,12 @@ label {
 	transition:
 		background-color 180ms ease,
 		border-color 180ms ease,
-		color 180ms ease;
+		color 180ms ease,
+		justify-content 0ms ease;
 }
 
 .sidebar-link svg {
-	flex: 0 0 auto;
+	flex: 0 0 1.25rem;
 }
 
 .sidebar-link:hover {
@@ -1610,6 +1673,24 @@ label {
 	font-size: 0.9rem;
 	font-weight: 500;
 	line-height: 1;
+	max-width: 8rem;
+	overflow: hidden;
+	transition:
+		opacity 180ms ease,
+		transform 180ms ease,
+		max-width 180ms ease;
+}
+
+.sidebar.is-collapsed .sidebar-link {
+	justify-content: flex-start;
+	gap: 0.72rem;
+	padding-inline: 0.4rem;
+}
+
+.sidebar.is-collapsed .sidebar-link-label {
+	opacity: 0;
+	transform: translateX(-8px);
+	max-width: 0;
 }
 
 .sidebar-actions {
@@ -1648,8 +1729,8 @@ label {
 	border-radius: 0.75rem;
 	display: inline-grid;
 	place-items: center;
-	background: var(--accent);
-	color: var(--accent-contrast);
+	background: color-mix(in srgb, #ffffff 92%, transparent);
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text) 8%, transparent);
 }
 
 .dashboard-identity strong {
@@ -1853,6 +1934,22 @@ label {
 	align-items: center;
 	gap: 0.52rem;
 	font-size: 1.2rem;
+}
+
+.landing-logo-mark {
+	width: 2.1rem;
+	height: 2.1rem;
+	display: inline-grid;
+	place-items: center;
+	border-radius: 0.75rem;
+	background: color-mix(in srgb, #ffffff 92%, transparent);
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text) 8%, transparent);
+}
+
+.brand-logo {
+	display: block;
+	width: 100%;
+	height: 100%;
 }
 
 .landing-nav nav {
