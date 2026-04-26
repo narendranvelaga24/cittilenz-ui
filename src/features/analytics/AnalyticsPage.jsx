@@ -69,7 +69,7 @@ export function AnalyticsPage() {
   const hasData = data && data.totalIssues > 0;
 
   return (
-    <section className="page-stack">
+    <section className="page-stack analytics-shell">
       <PageHeader eyebrow="SLA analytics" title="Service health overview" description="Compliance, escalation pressure, and resolution throughput in one compact view." />
       <div className="panel form-grid two">
         <label>

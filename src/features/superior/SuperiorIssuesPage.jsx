@@ -8,6 +8,7 @@ import { DataTable } from "../../components/ui/DataTable.jsx";
 import { OpenStreetMapAttribution } from "../../components/ui/OpenStreetMapAttribution.jsx";
 import { PageHeader } from "../../components/ui/PageHeader.jsx";
 import { Pagination } from "../../components/ui/Pagination.jsx";
+import { ToastNotification } from "../../components/ui/ToastNotification.jsx";
 import { errorMessage } from "../../lib/apiResponse";
 
 function pickFirst(...values) {
@@ -87,6 +88,8 @@ export function SuperiorIssuesPage() {
   const [status, setStatus] = useState("ESCALATED");
   const [departmentId, setDepartmentId] = useState("");
   const [reportedBy, setReportedBy] = useState("");
+  const [sortKey, setSortKey] = useState("hardSlaDeadline");
+  const [sortDirection, setSortDirection] = useState("desc");
   const [page, setPage] = useState(0);
   const [selectedIssue, setSelectedIssue] = useState(null);
   const [debouncedDepartmentId, setDebouncedDepartmentId] = useState("");
@@ -380,13 +383,24 @@ export function SuperiorIssuesPage() {
     },
   ];
 
+  const sortOptions = [
+    { value: "hardSlaDeadline", label: "SLA status" },
+    { value: "status", label: "Status" },
+    { value: "title", label: "Issue title" },
+    { value: "reporterDetails", label: "Reported by" },
+    { value: "officialDetails", label: "Working official" },
+    { value: "departmentName", label: "Department" },
+    { value: "requiresSupervisorIntervention", label: "Intervention" },
+  ];
+
   return (
     <section className="page-stack">
-      {toast.message && (
-        <div className={`toast-message toast-${toast.tone}`} role={toast.tone === "danger" ? "alert" : "status"} aria-live="polite">
-          {toast.message}
-        </div>
-      )}
+      <ToastNotification
+        message={toast.message}
+        tone={toast.tone}
+        role={toast.tone === "danger" ? "alert" : "status"}
+        ariaLive="polite"
+      />
       <PageHeader
         eyebrow="Escalation queue"
         title="Ward issues needing attention"
@@ -400,14 +414,43 @@ export function SuperiorIssuesPage() {
         loadingText="Loading escalations..."
         emptyTitle="No issues need intervention"
         searchPlaceholder="Search issues, department, reporter, official..."
+        sortKey={sortKey}
+        sortDirection={sortDirection}
+        onSortChange={({ key, direction }) => {
+          setSortKey(key);
+          setSortDirection(direction);
+        }}
         filters={
-        <div className="page-actions">
+        <div className="page-actions admin-issues-controls issues-sort-controls">
           <select value={status} onChange={(event) => { setStatus(event.target.value); setPage(0); }}>
             <option value="ESCALATED">Escalated</option>
             <option value="ASSIGNED">Assigned</option>
             <option value="IN_PROGRESS">In progress</option>
             <option value="RESOLVED">Resolved</option>
             <option value="">All</option>
+          </select>
+          <select
+            aria-label="Sort superior issues by"
+            value={sortKey}
+            onChange={(event) => {
+              setSortKey(event.target.value);
+              setPage(0);
+            }}
+          >
+            {sortOptions.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+          <select
+            aria-label="Sort order"
+            value={sortDirection}
+            onChange={(event) => {
+              setSortDirection(event.target.value);
+              setPage(0);
+            }}
+          >
+            <option value="desc">Newest first</option>
+            <option value="asc">Oldest first</option>
           </select>
           <select value={departmentId} onChange={(event) => {
             setDepartmentId(event.target.value);

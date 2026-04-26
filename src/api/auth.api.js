@@ -1,12 +1,13 @@
 import { api } from "./client";
 import { unwrapResponse } from "../lib/apiResponse";
+import { fetchCurrentUser } from "./currentUser";
 
 export async function login(payload) {
   return unwrapResponse(await api.post("/auth/login", payload));
 }
 
 export async function getCurrentUser() {
-  return unwrapResponse(await api.get("/users/me"));
+  return fetchCurrentUser();
 }
 
 export async function logout() {

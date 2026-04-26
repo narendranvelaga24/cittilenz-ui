@@ -8,6 +8,7 @@ import { IssueTimeline } from "../../components/issues/IssueTimeline.jsx";
 import { Alert } from "../../components/ui/Alert.jsx";
 import { OpenStreetMapAttribution } from "../../components/ui/OpenStreetMapAttribution.jsx";
 import { PageHeader } from "../../components/ui/PageHeader.jsx";
+import { ToastNotification } from "../../components/ui/ToastNotification.jsx";
 import { errorMessage } from "../../lib/apiResponse";
 import { env } from "../../lib/env";
 import { formatDate } from "../../lib/format";
@@ -18,6 +19,12 @@ function toAbsoluteAssetUrl(path) {
   const normalizedBase = env.baseUrl.endsWith("/") ? env.baseUrl.slice(0, -1) : env.baseUrl;
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   return `${normalizedBase}${normalizedPath}`;
+}
+
+function isSafeAssetUrl(url) {
+  if (!url) return false;
+  if (url.startsWith("http://") || url.startsWith("https://")) return true;
+  return url.startsWith("/uploads/");
 }
 
 export function IssueDetailPage() {
@@ -58,10 +65,12 @@ export function IssueDetailPage() {
   const canLinkDuplicate = isCitizen && issue && issue.reporterIds && !issue.reporterIds.includes(user?.id);
   const reportedImageUrl = toAbsoluteAssetUrl(issue.imageUrl || issue.reportedImageUrl || issue.uploadedImageUrl);
   const resolvedImageUrl = toAbsoluteAssetUrl(issue.resolvedImageUrl || issue.resolutionImageUrl || issue.fixedImageUrl);
+  const safeReportedImageUrl = isSafeAssetUrl(reportedImageUrl) ? reportedImageUrl : "";
+  const safeResolvedImageUrl = isSafeAssetUrl(resolvedImageUrl) ? resolvedImageUrl : "";
 
   return (
     <section className="page-stack">
-      {toastMessage && <div className="toast-message">{toastMessage}</div>}
+      <ToastNotification message={toastMessage} role="status" ariaLive="polite" />
       <PageHeader eyebrow={`Issue #${issue.id}`} title={issue.title} actions={<IssueStatusBadge status={issue.status} />} />
       {message && <Alert tone="success">{message}</Alert>}
       {error && <Alert tone="danger">{error}</Alert>}
@@ -95,9 +104,9 @@ export function IssueDetailPage() {
         </div>
         <div className="panel">
           <h2>Reported image</h2>
-          {reportedImageUrl ? (
-            <a className="issue-image-link" href={reportedImageUrl} target="_blank" rel="noreferrer">
-              <img className="issue-image-preview" src={reportedImageUrl} alt={`Reported evidence for issue ${issue.id}`} loading="lazy" />
+          {safeReportedImageUrl ? (
+            <a className="issue-image-link" href={safeReportedImageUrl} target="_blank" rel="noreferrer">
+              <img className="issue-image-preview" src={safeReportedImageUrl} alt={`Reported evidence for issue ${issue.id}`} loading="lazy" />
             </a>
           ) : (
             <p>No report image available yet.</p>
@@ -105,9 +114,9 @@ export function IssueDetailPage() {
         </div>
         <div className="panel">
           <h2>Resolution image</h2>
-          {resolvedImageUrl ? (
-            <a className="issue-image-link" href={resolvedImageUrl} target="_blank" rel="noreferrer">
-              <img className="issue-image-preview" src={resolvedImageUrl} alt={`Resolution proof for issue ${issue.id}`} loading="lazy" />
+          {safeResolvedImageUrl ? (
+            <a className="issue-image-link" href={safeResolvedImageUrl} target="_blank" rel="noreferrer">
+              <img className="issue-image-preview" src={safeResolvedImageUrl} alt={`Resolution proof for issue ${issue.id}`} loading="lazy" />
             </a>
           ) : (
             <p>Resolution image will appear once the issue is marked as resolved.</p>

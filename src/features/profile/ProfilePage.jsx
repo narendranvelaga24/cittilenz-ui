@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { deactivateAccount, deleteAccount, getUserProfile, changePassword, updateProfile } from "../../api/users.api";
 import { Alert } from "../../components/ui/Alert.jsx";
 import { PageHeader } from "../../components/ui/PageHeader.jsx";
+import { ToastNotification } from "../../components/ui/ToastNotification.jsx";
 import { errorMessage } from "../../lib/apiResponse";
 import { useAuth } from "../auth/useAuth";
 
@@ -125,8 +126,8 @@ export function ProfilePage() {
   }
 
   return (
-    <section className="page-stack">
-      {toastMessage && <div className="toast-message">{toastMessage}</div>}
+    <section className="page-stack profile-shell">
+      <ToastNotification message={toastMessage} role="status" ariaLive="polite" />
       <PageHeader eyebrow="Account" title="Your profile" description="Keep contact details accurate for civic notifications." />
       {message && <Alert tone="success">{message}</Alert>}
       {error && <Alert tone="danger">{error}</Alert>}

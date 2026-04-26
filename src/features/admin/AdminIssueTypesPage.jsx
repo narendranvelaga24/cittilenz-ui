@@ -17,6 +17,7 @@ import { Input } from "../../components/ui/input.jsx";
 import { Label } from "../../components/ui/label.jsx";
 import { PageHeader } from "../../components/ui/PageHeader.jsx";
 import { Pagination } from "../../components/ui/Pagination.jsx";
+import { ToastNotification } from "../../components/ui/ToastNotification.jsx";
 import { errorMessage } from "../../lib/apiResponse";
 
 const PAGE_SIZE = 10;
@@ -24,6 +25,7 @@ const PAGE_SIZE = 10;
 export function AdminIssueTypesPage() {
   const queryClient = useQueryClient();
   const [form, setForm] = useState({ name: "", departmentId: "", slaHours: 24, priority: "MEDIUM", description: "" });
+  const [isCreateIssueTypeDialogOpen, setIsCreateIssueTypeDialogOpen] = useState(false);
   const [toast, setToast] = useState({ message: "", tone: "info" });
   const [editingIssueTypeId, setEditingIssueTypeId] = useState(null);
   const [editForm, setEditForm] = useState({ departmentId: "", slaHours: "", priority: "", description: "", active: "" });
@@ -45,6 +47,8 @@ export function AdminIssueTypesPage() {
     mutationFn: createIssueType,
     onSuccess: () => {
       showToast("Issue type created.", "success");
+      setIsCreateIssueTypeDialogOpen(false);
+      setForm({ name: "", departmentId: "", slaHours: 24, priority: "MEDIUM", description: "" });
       queryClient.invalidateQueries({ queryKey: ["admin-issue-types"] });
     },
     onError: (err) => showToast(errorMessage(err), "danger"),
@@ -184,32 +188,60 @@ export function AdminIssueTypesPage() {
 
   return (
     <section className="page-stack">
-      {toast.message && (
-        <div className={`toast-message toast-${toast.tone}`} role={toast.tone === "danger" ? "alert" : "status"} aria-live="polite">
-          {toast.message}
-        </div>
-      )}
-      <PageHeader eyebrow="Admin" title="Issue types" />
-      <div className="detail-grid">
-        <form className="panel form-grid" onSubmit={submit}>
-          <h2>Create issue type</h2>
-          <FormField label="Name"><input value={form.name} onChange={(event) => update("name", event.target.value)} placeholder="Pothole" required /></FormField>
-          <FormField label="Department"><select value={form.departmentId} onChange={(event) => update("departmentId", event.target.value)} required><option value="">Select department</option>{departments.map((dept) => <option key={dept.id} value={dept.id}>{dept.name}</option>)}</select></FormField>
-          <FormField label="SLA hours"><input type="number" min={1} value={form.slaHours} onChange={(event) => update("slaHours", event.target.value)} required /></FormField>
-          <FormField label="Priority"><select value={form.priority} onChange={(event) => update("priority", event.target.value)}><option value="CRITICAL">Critical</option><option value="HIGH">High</option><option value="MEDIUM">Medium</option><option value="LOW">Low</option></select></FormField>
-          <FormField label="Description"><textarea rows={4} value={form.description} onChange={(event) => update("description", event.target.value)} /></FormField>
-          <button className="primary-button">Create issue type</button>
-        </form>
-        <DataTable
-          caption="Issue types"
-          columns={columns}
-          rows={visibleTypes}
-          getRowKey={(type) => type.id}
-          emptyTitle="No issue types found"
-          searchPlaceholder="Search issue types, department, priority..."
-          toolbar={<><strong>Latest issue types</strong><span>{issueTypesFetching ? "Refreshing..." : `Showing ${rangeStart}-${rangeEnd} of ${issueTypes.length}`}</span></>}
-        />
-      </div>
+      <ToastNotification
+        message={toast.message}
+        tone={toast.tone}
+        role={toast.tone === "danger" ? "alert" : "status"}
+        ariaLive="polite"
+      />
+      <PageHeader
+        eyebrow="Admin"
+        title="Issue types"
+        actions={(
+          <button type="button" className="primary-button" onClick={() => setIsCreateIssueTypeDialogOpen(true)}>
+            Create issue type
+          </button>
+        )}
+      />
+      <DataTable
+        caption="Issue types"
+        columns={columns}
+        rows={visibleTypes}
+        getRowKey={(type) => type.id}
+        emptyTitle="No issue types found"
+        searchPlaceholder="Search issue types, department, priority..."
+        toolbar={<><strong>Latest issue types</strong><span>{issueTypesFetching ? "Refreshing..." : `Showing ${rangeStart}-${rangeEnd} of ${issueTypes.length}`}</span></>}
+      />
+
+      <Dialog
+        open={isCreateIssueTypeDialogOpen}
+        onOpenChange={(open) => {
+          setIsCreateIssueTypeDialogOpen(open);
+          if (!open) {
+            setForm({ name: "", departmentId: "", slaHours: 24, priority: "MEDIUM", description: "" });
+          }
+        }}
+      >
+        <DialogContent className="admin-edit-dialog">
+          <DialogHeader>
+            <DialogTitle>Create issue type</DialogTitle>
+            <DialogDescription>
+              Add a new issue type with SLA, priority, and department mapping.
+            </DialogDescription>
+          </DialogHeader>
+          <form className="form-grid" onSubmit={submit}>
+            <FormField label="Name"><input value={form.name} onChange={(event) => update("name", event.target.value)} placeholder="Pothole" required /></FormField>
+            <FormField label="Department"><select value={form.departmentId} onChange={(event) => update("departmentId", event.target.value)} required><option value="">Select department</option>{departments.map((dept) => <option key={dept.id} value={dept.id}>{dept.name}</option>)}</select></FormField>
+            <FormField label="SLA hours"><input type="number" min={1} value={form.slaHours} onChange={(event) => update("slaHours", event.target.value)} required /></FormField>
+            <FormField label="Priority"><select value={form.priority} onChange={(event) => update("priority", event.target.value)}><option value="CRITICAL">Critical</option><option value="HIGH">High</option><option value="MEDIUM">Medium</option><option value="LOW">Low</option></select></FormField>
+            <FormField label="Description"><textarea rows={4} value={form.description} onChange={(event) => update("description", event.target.value)} /></FormField>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsCreateIssueTypeDialogOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={mutation.isPending}>{mutation.isPending ? "Creating..." : "Create issue type"}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={Boolean(editingIssueType)}

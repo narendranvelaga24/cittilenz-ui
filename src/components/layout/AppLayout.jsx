@@ -21,6 +21,7 @@ import { cn } from "../../lib/utils";
 import { useAuth } from "../../features/auth/useAuth";
 import { popRouteToast } from "../../lib/toast";
 import { Dock } from "../ui/Dock.jsx";
+import { ToastNotification } from "../ui/ToastNotification.jsx";
 import { useThemeMode } from "../ui/useThemeMode.js";
 
 const navByRole = {
@@ -68,6 +69,22 @@ const sidebarTransition = {
 
 const MotionAside = motion.aside;
 const MotionSpan = motion.span;
+
+function NavGlassFilter() {
+  return (
+    <svg aria-hidden="true" className="nav-glass-filter">
+      <defs>
+        <filter id="nav-liquid-glass" x="0%" y="0%" width="100%" height="100%" colorInterpolationFilters="sRGB">
+          <feTurbulence baseFrequency="0.04 0.04" numOctaves="1" result="turbulence" seed="2" type="fractalNoise" />
+          <feGaussianBlur in="turbulence" result="blurredNoise" stdDeviation="1.6" />
+          <feDisplacementMap in="SourceGraphic" in2="blurredNoise" result="displaced" scale="24" xChannelSelector="R" yChannelSelector="B" />
+          <feGaussianBlur in="displaced" result="finalBlur" stdDeviation="0.7" />
+          <feComposite in="finalBlur" in2="finalBlur" operator="over" />
+        </filter>
+      </defs>
+    </svg>
+  );
+}
 
 function isPathActive(pathname, path) {
   return pathname === path || pathname.startsWith(`${path}/`);
@@ -144,12 +161,15 @@ function getDockItems({ isDarkTheme, links, navigate, onLogout, onThemeToggle, p
   const items = [...navigationItems, ...utilityItems];
   if (items.length <= 5) return items;
 
+  const moreChildren = items.slice(4);
+
   return [
     ...items.slice(0, 4),
     {
+      active: moreChildren.some((item) => item.active),
       icon: MoreHorizontal,
       label: "More",
-      children: items.slice(4),
+      children: moreChildren,
     },
   ];
 }
@@ -185,7 +205,8 @@ export function AppLayout() {
 
   return (
     <div className="shell">
-      {toastMessage && <div className="toast-message" role="status" aria-live="polite">{toastMessage}</div>}
+      <NavGlassFilter />
+      <ToastNotification message={toastMessage} role="status" ariaLive="polite" />
       <DesktopSidebar isDarkTheme={isDarkTheme} links={links} onLogout={handleLogout} onThemeToggle={toggleTheme} />
       <main className="main-panel">
         <Outlet />

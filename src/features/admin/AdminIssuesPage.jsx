@@ -43,6 +43,7 @@ export function AdminIssuesPage() {
   const [selectedIssue, setSelectedIssue] = useState(null);
 
   const closeDetails = () => setSelectedIssue(null);
+  const statusOptions = ["SUBMITTED", "ASSIGNED", "REASSIGNED", "IN_PROGRESS", "ESCALATED", "RESOLVED", "REJECTED"];
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedWardId(wardId), 500);
@@ -163,16 +164,15 @@ export function AdminIssuesPage() {
         searchPlaceholder="Search issues, status, type, reporter, official..."
         toolbar={<span>{isFetching ? "Refreshing..." : `Showing ${rows.length} of ${data?.totalElements ?? 0}`}</span>}
         filters={
-          <div className="page-actions">
+          <div className="page-actions admin-issues-controls" aria-label="Admin issue filters">
             <select value={status} onChange={(event) => { setStatus(event.target.value); setPage(0); }}>
-              <option value="">All statuses</option>
-              <option value="ASSIGNED">Assigned</option>
-              <option value="IN_PROGRESS">In progress</option>
-              <option value="RESOLVED">Resolved</option>
-              <option value="ESCALATED">Escalated</option>
+              <option value="">Status</option>
+              {statusOptions.map((value) => (
+                <option key={value} value={value}>{value.replaceAll("_", " ")}</option>
+              ))}
             </select>
             <input
-              placeholder="Ward id"
+              placeholder="Ward"
               value={wardId}
               onChange={(event) => {
                 setWardId(event.target.value.replace(/[^0-9]/g, ""));
@@ -180,7 +180,7 @@ export function AdminIssuesPage() {
               }}
             />
             <input
-              placeholder="Department id"
+              placeholder="Dept"
               value={departmentId}
               onChange={(event) => {
                 setDepartmentId(event.target.value.replace(/[^0-9]/g, ""));
@@ -188,13 +188,29 @@ export function AdminIssuesPage() {
               }}
             />
             <input
-              placeholder="Reported by user id"
+              placeholder="Reporter"
               value={reportedBy}
               onChange={(event) => {
                 setReportedBy(event.target.value.replace(/[^0-9]/g, ""));
                 setPage(0);
               }}
             />
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => {
+                setStatus("");
+                setWardId("");
+                setDepartmentId("");
+                setReportedBy("");
+                setDebouncedWardId("");
+                setDebouncedDepartmentId("");
+                setDebouncedReportedBy("");
+                setPage(0);
+              }}
+            >
+              Clear
+            </button>
           </div>
         }
       />

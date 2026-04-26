@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { registerCitizen } from "../../api/auth.api";
 import { AnimatedCharactersPanel } from "../../components/auth/AnimatedCharactersPanel.jsx";
 import { Alert } from "../../components/ui/Alert.jsx";
+import { ToastNotification } from "../../components/ui/ToastNotification.jsx";
 import { errorMessage } from "../../lib/apiResponse";
 import { pushRouteToast } from "../../lib/toast";
 
@@ -101,11 +102,7 @@ export function RegisterPage() {
 
   return (
     <main className="auth-page">
-      {toast.message && (
-        <div className={`toast-message toast-${toast.tone}`} role="alert" aria-live="assertive">
-          {toast.message}
-        </div>
-      )}
+      <ToastNotification message={toast.message} tone={toast.tone} role="alert" ariaLive="assertive" />
       <div className="auth-layout">
         <div className="auth-illustration">
           <div className="auth-illustration-header">

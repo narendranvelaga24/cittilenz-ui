@@ -69,7 +69,7 @@ export function CitizenDashboard() {
   const isLoading = dashboardQuery.isLoading && summaryQuery.isLoading;
 
   return (
-    <section className="page-stack">
+    <section className="page-stack dashboard-shell">
       <DashboardIdentity role={user?.role} />
       <HeroPanel
         eyebrow="Citizen dashboard"

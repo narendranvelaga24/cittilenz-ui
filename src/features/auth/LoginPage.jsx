@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatedCharactersPanel } from "../../components/auth/AnimatedCharactersPanel.jsx";
 import { Alert } from "../../components/ui/Alert.jsx";
+import { ToastNotification } from "../../components/ui/ToastNotification.jsx";
 import { errorMessage } from "../../lib/apiResponse";
 import { getHomeForRole } from "../../lib/roles";
 import { popRouteToast, pushRouteToast } from "../../lib/toast";
@@ -72,7 +73,7 @@ export function LoginPage() {
 
   return (
     <main className="auth-page">
-      {toastMessage && <div className="toast-message" role="status" aria-live="polite">{toastMessage}</div>}
+      <ToastNotification message={toastMessage} role="status" ariaLive="polite" />
       <div className="auth-layout">
         <div className="auth-illustration">
           <div className="auth-illustration-header">

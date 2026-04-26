@@ -7,6 +7,12 @@ import {
 } from "../ui/dialog.jsx";
 import { formatDate } from "../../lib/format";
 
+function isSafeAssetUrl(url) {
+  if (!url) return false;
+  if (url.startsWith("http://") || url.startsWith("https://")) return true;
+  return url.startsWith("/uploads/");
+}
+
 function formatText(value) {
   if (value === undefined || value === null) return "N/A";
   const text = String(value).trim();
@@ -150,7 +156,7 @@ export function IssueDetailsDialog({ issue, open, onOpenChange }) {
                 <dd>{asYesNo(Boolean(issue.active))}</dd>
               </dl>
 
-              {issue.imageUrl && (
+              {isSafeAssetUrl(issue.imageUrl) && (
                 <section>
                   <h4 className="issue-view-section-title">Reported Image</h4>
                   <a className="issue-image-link" href={issue.imageUrl} target="_blank" rel="noreferrer">
@@ -159,7 +165,7 @@ export function IssueDetailsDialog({ issue, open, onOpenChange }) {
                 </section>
               )}
 
-              {issue.resolvedImageUrl && (
+              {isSafeAssetUrl(issue.resolvedImageUrl) && (
                 <section>
                   <h4 className="issue-view-section-title">Resolved Image</h4>
                   <a className="issue-image-link" href={issue.resolvedImageUrl} target="_blank" rel="noreferrer">

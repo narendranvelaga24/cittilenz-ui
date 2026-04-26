@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { getIssueById, getRoleIssues, resolveIssue, startIssue } from "../../api/issues.api";
 import { IssueDetailsDialog } from "../../components/issues/IssueDetailsDialog.jsx";
 import { IssueStatusBadge } from "../../components/issues/IssueStatusBadge.jsx";
@@ -8,6 +8,7 @@ import { FileUpload } from "../../components/ui/FileUpload.jsx";
 import { OpenStreetMapAttribution } from "../../components/ui/OpenStreetMapAttribution.jsx";
 import { PageHeader } from "../../components/ui/PageHeader.jsx";
 import { Pagination } from "../../components/ui/Pagination.jsx";
+import { ToastNotification } from "../../components/ui/ToastNotification.jsx";
 import { useAuth } from "../auth/useAuth";
 import { errorMessage } from "../../lib/apiResponse";
 import { formatDate } from "../../lib/format";
@@ -253,6 +254,8 @@ export function OfficialIssuesPage({ mode }) {
   const [debouncedWardId, setDebouncedWardId] = useState("");
   const [debouncedDepartmentId, setDebouncedDepartmentId] = useState("");
   const [debouncedReportedBy, setDebouncedReportedBy] = useState("");
+  const [sortKey, setSortKey] = useState("hardSlaDeadline");
+  const [sortDirection, setSortDirection] = useState("desc");
   const [canonicalIssues, setCanonicalIssues] = useState({});
   const [selectedIssue, setSelectedIssue] = useState(null);
 
@@ -671,13 +674,29 @@ export function OfficialIssuesPage({ mode }) {
     });
   }
 
+  const sortOptions = useMemo(() => ([
+    { value: "hardSlaDeadline", label: "SLA deadline" },
+    { value: "status", label: "Status" },
+    { value: "title", label: "Issue title" },
+    { value: "issueType", label: "Issue type" },
+    { value: "reporterDetails", label: "Reported by" },
+    ...(role === "ADMIN" ? [{ value: "officialDetails", label: "Official" }, { value: "wardName", label: "Ward" }] : []),
+  ]), [role]);
+
+  useEffect(() => {
+    if (!sortOptions.some((option) => option.value === sortKey)) {
+      setSortKey("hardSlaDeadline");
+    }
+  }, [sortKey, sortOptions]);
+
   return (
     <section className="page-stack">
-      {toast.message && (
-        <div className={`toast-message toast-${toast.tone}`} role={toast.tone === "danger" ? "alert" : "status"} aria-live="polite">
-          {toast.message}
-        </div>
-      )}
+      <ToastNotification
+        message={toast.message}
+        tone={toast.tone}
+        role={toast.tone === "danger" ? "alert" : "status"}
+        ariaLive="polite"
+      />
       <PageHeader
         eyebrow={role === "ADMIN" ? "Admin issue view" : "Official work queue"}
         title={role === "ADMIN" ? "All issues" : "Official issues"}
@@ -691,14 +710,43 @@ export function OfficialIssuesPage({ mode }) {
         loadingText="Loading issues..."
         emptyTitle="No matching issues"
         searchPlaceholder="Search issues, status, type, reporter..."
+        sortKey={sortKey}
+        sortDirection={sortDirection}
+        onSortChange={({ key, direction }) => {
+          setSortKey(key);
+          setSortDirection(direction);
+        }}
         filters={
-        <div className="page-actions">
+        <div className="page-actions admin-issues-controls issues-sort-controls">
           <select value={status} onChange={(event) => { setStatus(event.target.value); setPage(0); }}>
             <option value="">All statuses</option>
             <option value="ASSIGNED">Assigned</option>
             <option value="IN_PROGRESS">In progress</option>
             <option value="RESOLVED">Resolved</option>
             <option value="ESCALATED">Escalated</option>
+          </select>
+          <select
+            aria-label="Sort issues by"
+            value={sortKey}
+            onChange={(event) => {
+              setSortKey(event.target.value);
+              setPage(0);
+            }}
+          >
+            {sortOptions.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+          <select
+            aria-label="Sort order"
+            value={sortDirection}
+            onChange={(event) => {
+              setSortDirection(event.target.value);
+              setPage(0);
+            }}
+          >
+            <option value="desc">Newest first</option>
+            <option value="asc">Oldest first</option>
           </select>
           {role === "OFFICIAL" && (
             <label>

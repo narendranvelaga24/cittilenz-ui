@@ -1,8 +1,9 @@
 import { api } from "./client";
 import { unwrapResponse } from "../lib/apiResponse";
+import { fetchCurrentUser } from "./currentUser";
 
 export async function getUserProfile() {
-  return unwrapResponse(await api.get("/users/me"));
+  return fetchCurrentUser();
 }
 
 export async function updateProfile(payload) {

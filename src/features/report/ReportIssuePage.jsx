@@ -7,6 +7,7 @@ import { lookupWard } from "../../api/wards.api";
 import { FileUpload } from "../../components/ui/FileUpload.jsx";
 import { OpenStreetMapAttribution } from "../../components/ui/OpenStreetMapAttribution.jsx";
 import { PageHeader } from "../../components/ui/PageHeader.jsx";
+import { ToastNotification } from "../../components/ui/ToastNotification.jsx";
 import { errorMessage } from "../../lib/apiResponse";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -207,18 +208,19 @@ export function ReportIssuePage() {
   }
 
   return (
-    <section className="page-stack">
-      {toast.message && (
-        <div className={`toast-message toast-${toast.tone}`} role={toast.tone === "danger" ? "alert" : "status"} aria-live="polite">
-          {toast.message}
-        </div>
-      )}
+    <section className="page-stack report-shell">
+      <ToastNotification
+        message={toast.message}
+        tone={toast.tone}
+        role={toast.tone === "danger" ? "alert" : "status"}
+        ariaLive="polite"
+      />
       <PageHeader eyebrow="Citizen flow" title="Report a civic issue" description="Capture evidence, verify the ward, let AI assist, then submit." />
-      <form className="report-grid" onSubmit={submitIssue}>
-        <div className="panel form-grid">
+      <form className="report-grid report-grid-split" onSubmit={submitIssue}>
+        <div className="panel form-grid report-form-card">
           <label>Title<input value={form.title} onChange={(event) => update("title", event.target.value)} required /></label>
           <label>Description<textarea rows={5} value={form.description} onChange={(event) => update("description", event.target.value)} required /></label>
-          <button type="button" className="secondary-button" onClick={captureLocation} disabled={loadingStep === "location"}>
+          <button type="button" className="secondary-button report-liquid-button" onClick={captureLocation} disabled={loadingStep === "location"}>
             {loadingStep === "location" ? "Detecting location..." : "Capture GPS location"}
           </button>
           <label>Latitude<input value={coords?.lat ?? ""} readOnly placeholder="Capture GPS to fill" required /></label>
@@ -233,7 +235,7 @@ export function ReportIssuePage() {
             required
             value={image}
           />
-          <button type="button" className="secondary-button" onClick={analyzeImage} disabled={!image || loadingStep === "ai"}>
+          <button type="button" className="secondary-button report-liquid-button" onClick={analyzeImage} disabled={!image || loadingStep === "ai"}>
             {loadingStep === "ai" ? "Analyzing image..." : aiPredictionFailed ? "Retry prediction" : "Analyze image with AI"}
           </button>
           <label>
@@ -251,9 +253,9 @@ export function ReportIssuePage() {
             </select>
           </label>
           <label>Department<input value={selectedIssueType?.departmentName || ""} readOnly placeholder="Department will be derived from AI or issue type" required /></label>
-          <button className="primary-button" disabled={loadingStep === "submit"}>{loadingStep === "submit" ? "Submitting..." : "Submit issue"}</button>
+          <button className="primary-button report-submit-button" disabled={loadingStep === "submit"}>{loadingStep === "submit" ? "Submitting..." : "Submit issue"}</button>
         </div>
-        <aside className="panel status-panel">
+        <aside className="panel status-panel report-status-card">
           <h2>Submission checks</h2>
           <Check label="Image selected" done={Boolean(image)} detail={image?.name} />
           <Check label="GPS captured" done={Boolean(coords)} detail={coords ? `${coords.lat}, ${coords.lng} (${coords.accuracy}m)` : ""} />

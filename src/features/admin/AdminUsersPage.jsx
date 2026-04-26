@@ -19,6 +19,7 @@ import { Input } from "../../components/ui/input.jsx";
 import { Label } from "../../components/ui/label.jsx";
 import { PageHeader } from "../../components/ui/PageHeader.jsx";
 import { Pagination } from "../../components/ui/Pagination.jsx";
+import { ToastNotification } from "../../components/ui/ToastNotification.jsx";
 import { errorMessage } from "../../lib/apiResponse";
 
 const PAGE_SIZE = 10;
@@ -26,6 +27,7 @@ const PAGE_SIZE = 10;
 export function AdminUsersPage() {
   const queryClient = useQueryClient();
   const [form, setForm] = useState({ username: "", fullName: "", email: "", mobile: "", password: "", role: "OFFICIAL", wardId: "", departmentId: "" });
+  const [isCreateUserDialogOpen, setIsCreateUserDialogOpen] = useState(false);
   const [editingUserId, setEditingUserId] = useState(null);
   const [viewingUserId, setViewingUserId] = useState(null);
   const [editForm, setEditForm] = useState({ fullName: "", email: "", mobile: "", wardId: "", departmentId: "", isActive: "" });
@@ -48,6 +50,7 @@ export function AdminUsersPage() {
       setToastMessage("Staff user created");
       setError("");
       setForm({ username: "", fullName: "", email: "", mobile: "", password: "", role: "OFFICIAL", wardId: "", departmentId: "" });
+      setIsCreateUserDialogOpen(false);
       setPage(0);
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     },
@@ -280,35 +283,62 @@ export function AdminUsersPage() {
 
   return (
     <section className="page-stack">
-      <PageHeader eyebrow="Admin" title="User management" />
-      {toastMessage && <div className="toast-message" role="status" aria-live="polite">{toastMessage}</div>}
+      <PageHeader
+        eyebrow="Admin"
+        title="User management"
+        actions={(
+          <button type="button" className="primary-button" onClick={() => setIsCreateUserDialogOpen(true)}>
+            Create user
+          </button>
+        )}
+      />
+      <ToastNotification message={toastMessage} role="status" ariaLive="polite" />
       {message && <Alert tone="success">{message}</Alert>}
       {error && <Alert tone="danger">{error}</Alert>}
-      <div className="detail-grid">
-        <form className="panel form-grid" onSubmit={submit}>
-          <h2>Create official or superior</h2>
-          <FormField label="Role"><select value={form.role} onChange={(event) => update("role", event.target.value)}><option value="OFFICIAL">Official</option><option value="WARD_SUPERIOR">Ward superior</option></select></FormField>
-          <FormField label="Username"><input value={form.username} onChange={(event) => update("username", event.target.value)} required /></FormField>
-          <FormField label="Full name"><input value={form.fullName} onChange={(event) => update("fullName", event.target.value)} required /></FormField>
-          <FormField label="Email"><input type="email" value={form.email} onChange={(event) => update("email", event.target.value)} required /></FormField>
-          <FormField label="Mobile"><input value={form.mobile} onChange={(event) => update("mobile", event.target.value)} required /></FormField>
-          <FormField label="Password"><input type="password" minLength={8} value={form.password} onChange={(event) => update("password", event.target.value)} required /></FormField>
-          <FormField label="Ward"><select value={form.wardId} onChange={(event) => update("wardId", event.target.value)} required><option value="">Select ward</option>{wards.map((ward) => <option key={ward.id} value={ward.id}>{ward.wardName}</option>)}</select></FormField>
-          {form.role === "OFFICIAL" && (
-            <FormField label="Department"><select value={form.departmentId} onChange={(event) => update("departmentId", event.target.value)} required><option value="">Select department</option>{departments.map((dept) => <option key={dept.id} value={dept.id}>{dept.name}</option>)}</select></FormField>
-          )}
-          <button className="primary-button" disabled={mutation.isPending}>{mutation.isPending ? "Creating..." : "Create user"}</button>
-        </form>
-        <DataTable
-          caption="Admin users"
-          columns={columns}
-          rows={visibleUsers}
-          getRowKey={(user) => user.id}
-          emptyTitle="No users found"
-          searchPlaceholder="Search users, email, mobile, role..."
-          toolbar={<><strong>Latest users</strong><span>{usersFetching ? "Refreshing..." : `Showing ${rangeStart}-${rangeEnd} of ${users.length}`}</span></>}
-        />
-      </div>
+      <DataTable
+        caption="Admin users"
+        columns={columns}
+        rows={visibleUsers}
+        getRowKey={(user) => user.id}
+        emptyTitle="No users found"
+        searchPlaceholder="Search users, email, mobile, role..."
+        toolbar={<><strong>Latest users</strong><span>{usersFetching ? "Refreshing..." : `Showing ${rangeStart}-${rangeEnd} of ${users.length}`}</span></>}
+      />
+
+      <Dialog
+        open={isCreateUserDialogOpen}
+        onOpenChange={(open) => {
+          setIsCreateUserDialogOpen(open);
+          if (!open) {
+            setForm({ username: "", fullName: "", email: "", mobile: "", password: "", role: "OFFICIAL", wardId: "", departmentId: "" });
+          }
+        }}
+      >
+        <DialogContent className="admin-edit-dialog">
+          <DialogHeader>
+            <DialogTitle>Create official or superior</DialogTitle>
+            <DialogDescription>
+              Add a new staff account with role and assignment details.
+            </DialogDescription>
+          </DialogHeader>
+          <form className="form-grid" onSubmit={submit}>
+            <FormField label="Role"><select value={form.role} onChange={(event) => update("role", event.target.value)}><option value="OFFICIAL">Official</option><option value="WARD_SUPERIOR">Ward superior</option></select></FormField>
+            <FormField label="Username"><input value={form.username} onChange={(event) => update("username", event.target.value)} required /></FormField>
+            <FormField label="Full name"><input value={form.fullName} onChange={(event) => update("fullName", event.target.value)} required /></FormField>
+            <FormField label="Email"><input type="email" value={form.email} onChange={(event) => update("email", event.target.value)} required /></FormField>
+            <FormField label="Mobile"><input value={form.mobile} onChange={(event) => update("mobile", event.target.value)} required /></FormField>
+            <FormField label="Password"><input type="password" minLength={8} value={form.password} onChange={(event) => update("password", event.target.value)} required /></FormField>
+            <FormField label="Ward"><select value={form.wardId} onChange={(event) => update("wardId", event.target.value)} required><option value="">Select ward</option>{wards.map((ward) => <option key={ward.id} value={ward.id}>{ward.wardName}</option>)}</select></FormField>
+            {form.role === "OFFICIAL" && (
+              <FormField label="Department"><select value={form.departmentId} onChange={(event) => update("departmentId", event.target.value)} required><option value="">Select department</option>{departments.map((dept) => <option key={dept.id} value={dept.id}>{dept.name}</option>)}</select></FormField>
+            )}
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsCreateUserDialogOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={mutation.isPending}>{mutation.isPending ? "Creating..." : "Create user"}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={Boolean(viewingUser)}
