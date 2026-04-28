@@ -1,5 +1,5 @@
-import { ArrowRight, Building2, Camera, MapPin, Sparkles, TimerReset } from "lucide-react";
-import { useEffect } from "react";
+import { ArrowRight, Building2, Camera, MapPin, Menu, Sparkles, TimerReset, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { ThemeSwitch } from "../../components/ui/ThemeSwitch.jsx";
 import { getHomeForRole } from "../../lib/roles";
@@ -36,8 +36,15 @@ const metrics = [
   ["SLA-backed", "official accountability"],
 ];
 
+const navItems = [
+  { label: "How it works", href: "#how-it-works" },
+  { label: "Roles", href: "#roles" },
+  { label: "Login", to: "/login" },
+];
+
 export function LandingPage() {
   const { booting, isAuthenticated, user } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -50,10 +57,10 @@ export function LandingPage() {
     const observer = new window.IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) entry.target.classList.add("in-view");
+          entry.target.classList.toggle("in-view", entry.isIntersecting);
         });
       },
-      { threshold: 0.12, rootMargin: "0px 0px -8% 0px" },
+      { threshold: 0.12, rootMargin: "-6% 0px -10% 0px" },
     );
     targets.forEach((node) => observer.observe(node));
 
@@ -88,12 +95,44 @@ export function LandingPage() {
           </span>
           Cittilenz
         </Link>
-        <nav>
-          <a href="#how-it-works">How it works</a>
-          <a href="#roles">Roles</a>
-          <Link to="/login">Login</Link>
+        <nav className="landing-desktop-nav" aria-label="Primary navigation">
+          {navItems.map((item) =>
+            item.to ? (
+              <Link key={item.label} to={item.to}>{item.label}</Link>
+            ) : (
+              <a href={item.href} key={item.label}>{item.label}</a>
+            ),
+          )}
           <ThemeSwitch />
         </nav>
+        <div className="landing-mobile-nav">
+          <button
+            aria-controls="landing-mobile-menu"
+            aria-expanded={mobileMenuOpen}
+            className="landing-menu-button"
+            onClick={() => setMobileMenuOpen((open) => !open)}
+            type="button"
+          >
+            {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+            <span>Menu</span>
+          </button>
+          {mobileMenuOpen ? (
+            <nav className="landing-mobile-menu" id="landing-mobile-menu" aria-label="Mobile navigation">
+              {navItems.map((item) =>
+                item.to ? (
+                  <Link key={item.label} onClick={() => setMobileMenuOpen(false)} to={item.to}>
+                    {item.label}
+                  </Link>
+                ) : (
+                  <a href={item.href} key={item.label} onClick={() => setMobileMenuOpen(false)}>
+                    {item.label}
+                  </a>
+                ),
+              )}
+              <ThemeSwitch />
+            </nav>
+          ) : null}
+        </div>
       </header>
 
       <section className="landing-hero">
@@ -109,7 +148,7 @@ export function LandingPage() {
               Report as citizen
               <ArrowRight size={18} />
             </Link>
-            <Link className="lux-button outline" to="/login">Official login</Link>
+            <Link className="lux-button outline official-login-link" to="/login">Official login</Link>
           </div>
         </div>
 
@@ -150,7 +189,7 @@ export function LandingPage() {
           {steps.map((step, index) => {
             const Icon = step.icon;
             return (
-              <article className="lux-card fade-in" style={{ animationDelay: `${index * 90}ms` }} key={step.title}>
+              <article className="lux-card fade-in" style={{ transitionDelay: `${index * 90}ms` }} key={step.title}>
                 <Icon size={24} />
                 <h3>{step.title}</h3>
                 <p>{step.text}</p>
@@ -185,6 +224,27 @@ export function LandingPage() {
           <ArrowRight size={18} />
         </Link>
       </section>
+
+      <footer className="landing-footer fade-in">
+        <div className="landing-footer-brand">
+          <Link className="landing-logo" to="/">
+            <span className="landing-logo-mark">
+              <img alt="Cittilenz logo" className="brand-logo" height="30" src={LOGO_SRC} width="30" />
+            </span>
+            Cittilenz
+          </Link>
+          <p>Geo-tagged reporting, official workflows, and SLA visibility for cleaner civic response.</p>
+        </div>
+        <nav className="landing-footer-links" aria-label="Footer navigation">
+          <a href="#how-it-works">How it works</a>
+          <a href="#roles">Roles</a>
+          <Link to="/login">Official login</Link>
+          <Link to="/register">Citizen signup</Link>
+        </nav>
+        <p className="landing-footer-meta">
+          © {new Date().getFullYear()} Cittilenz. Built for accountable civic action.
+        </p>
+      </footer>
     </main>
   );
 }

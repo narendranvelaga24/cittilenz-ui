@@ -22,6 +22,7 @@ import { formatRoleLabel } from "../../lib/branding";
 import { useAuth } from "../../features/auth/useAuth";
 import { popRouteToast } from "../../lib/toast";
 import { Dock } from "../ui/Dock.jsx";
+import { PageTransition } from "../routing/PageTransition.jsx";
 import { ToastNotification } from "../ui/ToastNotification.jsx";
 import { useThemeMode } from "../ui/useThemeMode.js";
 
@@ -211,7 +212,9 @@ export function AppLayout() {
       <ToastNotification message={toastMessage} role="status" ariaLive="polite" />
       <DesktopSidebar isDarkTheme={isDarkTheme} links={links} onLogout={handleLogout} onThemeToggle={toggleTheme} role={user?.role} />
       <main className="main-panel">
-        <Outlet />
+        <PageTransition>
+          <Outlet />
+        </PageTransition>
       </main>
       <Dock items={dockItems} />
     </div>

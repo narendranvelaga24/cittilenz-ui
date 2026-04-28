@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { AppLayout } from "../components/layout/AppLayout.jsx";
+import { PageTransition } from "../components/routing/PageTransition.jsx";
 import { ProtectedRoute } from "../components/routing/ProtectedRoute.jsx";
 import { AdminDashboard } from "../features/admin/AdminDashboard.jsx";
 import { AdminIssuesPage } from "../features/admin/AdminIssuesPage.jsx";
@@ -20,9 +21,9 @@ import { SuperiorDashboard } from "../features/superior/SuperiorDashboard.jsx";
 import { SuperiorIssuesPage } from "../features/superior/SuperiorIssuesPage.jsx";
 
 export const router = createBrowserRouter([
-  { path: "/", element: <LandingPage /> },
-  { path: "/login", element: <LoginPage /> },
-  { path: "/register", element: <RegisterPage /> },
+  { path: "/", element: <PageTransition><LandingPage /></PageTransition> },
+  { path: "/login", element: <PageTransition><LoginPage /></PageTransition> },
+  { path: "/register", element: <PageTransition><RegisterPage /></PageTransition> },
   {
     element: <ProtectedRoute />,
     children: [
