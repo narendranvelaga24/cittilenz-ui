@@ -1286,6 +1286,12 @@ html[data-theme="dark"] .auth-mobile-brand {
 	padding: 0;
 	cursor: pointer;
 	color: var(--text-muted);
+	transition: opacity 150ms ease;
+}
+
+.auth-password-toggle:hover {
+	opacity: 0.7;
+	transform: translateY(-50%);
 }
 
 .auth-toggle-icon {
