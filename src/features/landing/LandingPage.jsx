@@ -5,6 +5,7 @@ import { ThemeSwitch } from "../../components/ui/ThemeSwitch.jsx";
 import { useClickOutside } from "../../hooks/useClickOutside.js";
 import { getHomeForRole } from "../../lib/roles";
 import { useAuth } from "../auth/useAuth";
+import "./landing.css";
 
 const LOGO_SRC = "/logo.png";
 
