@@ -1,70 +1,81 @@
+import { lazy, Suspense } from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { AppLayout } from "../components/layout/AppLayout.jsx";
 import { PageTransition } from "../components/routing/PageTransition.jsx";
 import { ProtectedRoute } from "../components/routing/ProtectedRoute.jsx";
-import { AdminDashboard } from "../features/admin/AdminDashboard.jsx";
-import { AdminIssuesPage } from "../features/admin/AdminIssuesPage.jsx";
-import { AdminIssueTypesPage } from "../features/admin/AdminIssueTypesPage.jsx";
-import { AdminUsersPage } from "../features/admin/AdminUsersPage.jsx";
-import { LoginPage } from "../features/auth/LoginPage.jsx";
-import { RegisterPage } from "../features/auth/RegisterPage.jsx";
-import { AnalyticsPage } from "../features/analytics/AnalyticsPage.jsx";
-import { CitizenDashboard } from "../features/citizen/CitizenDashboard.jsx";
-import { IssueDetailPage } from "../features/issues/IssueDetailPage.jsx";
-import { MyIssuesPage } from "../features/issues/MyIssuesPage.jsx";
-import { LandingPage } from "../features/landing/LandingPage.jsx";
-import { OfficialDashboard } from "../features/official/OfficialDashboard.jsx";
-import { OfficialIssuesPage } from "../features/official/OfficialIssuesPage.jsx";
-import { ProfilePage } from "../features/profile/ProfilePage.jsx";
-import { ReportIssuePage } from "../features/report/ReportIssuePage.jsx";
-import { SuperiorDashboard } from "../features/superior/SuperiorDashboard.jsx";
-import { SuperiorIssuesPage } from "../features/superior/SuperiorIssuesPage.jsx";
+
+const lazyNamed = (factory, exportName) =>
+  lazy(() => factory().then((module) => ({ default: module[exportName] })));
+
+const AdminDashboard = lazyNamed(() => import("../features/admin/AdminDashboard.jsx"), "AdminDashboard");
+const AdminIssuesPage = lazyNamed(() => import("../features/admin/AdminIssuesPage.jsx"), "AdminIssuesPage");
+const AdminIssueTypesPage = lazyNamed(() => import("../features/admin/AdminIssueTypesPage.jsx"), "AdminIssueTypesPage");
+const AdminUsersPage = lazyNamed(() => import("../features/admin/AdminUsersPage.jsx"), "AdminUsersPage");
+const LoginPage = lazyNamed(() => import("../features/auth/LoginPage.jsx"), "LoginPage");
+const RegisterPage = lazyNamed(() => import("../features/auth/RegisterPage.jsx"), "RegisterPage");
+const AnalyticsPage = lazyNamed(() => import("../features/analytics/AnalyticsPage.jsx"), "AnalyticsPage");
+const CitizenDashboard = lazyNamed(() => import("../features/citizen/CitizenDashboard.jsx"), "CitizenDashboard");
+const IssueDetailPage = lazyNamed(() => import("../features/issues/IssueDetailPage.jsx"), "IssueDetailPage");
+const MyIssuesPage = lazyNamed(() => import("../features/issues/MyIssuesPage.jsx"), "MyIssuesPage");
+const LandingPage = lazyNamed(() => import("../features/landing/LandingPage.jsx"), "LandingPage");
+const OfficialDashboard = lazyNamed(() => import("../features/official/OfficialDashboard.jsx"), "OfficialDashboard");
+const OfficialIssuesPage = lazyNamed(() => import("../features/official/OfficialIssuesPage.jsx"), "OfficialIssuesPage");
+const ProfilePage = lazyNamed(() => import("../features/profile/ProfilePage.jsx"), "ProfilePage");
+const ReportIssuePage = lazyNamed(() => import("../features/report/ReportIssuePage.jsx"), "ReportIssuePage");
+const SuperiorDashboard = lazyNamed(() => import("../features/superior/SuperiorDashboard.jsx"), "SuperiorDashboard");
+const SuperiorIssuesPage = lazyNamed(() => import("../features/superior/SuperiorIssuesPage.jsx"), "SuperiorIssuesPage");
+
+const withSuspense = (element) => (
+  <Suspense fallback={<div className="screen-message">Loading page...</div>}>
+    {element}
+  </Suspense>
+);
 
 export const router = createBrowserRouter([
-  { path: "/", element: <PageTransition><LandingPage /></PageTransition> },
-  { path: "/login", element: <PageTransition><LoginPage /></PageTransition> },
-  { path: "/register", element: <PageTransition><RegisterPage /></PageTransition> },
+  { path: "/", element: withSuspense(<PageTransition><LandingPage /></PageTransition>) },
+  { path: "/login", element: withSuspense(<PageTransition><LoginPage /></PageTransition>) },
+  { path: "/register", element: withSuspense(<PageTransition><RegisterPage /></PageTransition>) },
   {
     element: <ProtectedRoute />,
     children: [
       {
         element: <AppLayout />,
         children: [
-          { path: "/profile", element: <ProfilePage /> },
+          { path: "/profile", element: withSuspense(<ProfilePage />) },
           {
             element: <ProtectedRoute roles={["CITIZEN"]} />,
             children: [
-              { path: "/citizen/dashboard", element: <CitizenDashboard /> },
-              { path: "/citizen/report-issue", element: <ReportIssuePage /> },
-              { path: "/citizen/issues", element: <MyIssuesPage /> },
-              { path: "/citizen/issues/:id", element: <IssueDetailPage /> },
+              { path: "/citizen/dashboard", element: withSuspense(<CitizenDashboard />) },
+              { path: "/citizen/report-issue", element: withSuspense(<ReportIssuePage />) },
+              { path: "/citizen/issues", element: withSuspense(<MyIssuesPage />) },
+              { path: "/citizen/issues/:id", element: withSuspense(<IssueDetailPage />) },
             ],
           },
           {
             element: <ProtectedRoute roles={["OFFICIAL"]} />,
             children: [
-              { path: "/official/dashboard", element: <OfficialDashboard /> },
-              { path: "/official/issues", element: <OfficialIssuesPage /> },
-              { path: "/official/issues/:id", element: <IssueDetailPage /> },
+              { path: "/official/dashboard", element: withSuspense(<OfficialDashboard />) },
+              { path: "/official/issues", element: withSuspense(<OfficialIssuesPage />) },
+              { path: "/official/issues/:id", element: withSuspense(<IssueDetailPage />) },
             ],
           },
           {
             element: <ProtectedRoute roles={["WARD_SUPERIOR"]} />,
             children: [
-              { path: "/superior/dashboard", element: <SuperiorDashboard /> },
-              { path: "/superior/issues", element: <SuperiorIssuesPage /> },
-              { path: "/superior/issues/:id", element: <IssueDetailPage /> },
-              { path: "/analytics", element: <AnalyticsPage /> },
+              { path: "/superior/dashboard", element: withSuspense(<SuperiorDashboard />) },
+              { path: "/superior/issues", element: withSuspense(<SuperiorIssuesPage />) },
+              { path: "/superior/issues/:id", element: withSuspense(<IssueDetailPage />) },
+              { path: "/analytics", element: withSuspense(<AnalyticsPage />) },
             ],
           },
           {
             element: <ProtectedRoute roles={["ADMIN"]} />,
             children: [
-              { path: "/admin/dashboard", element: <AdminDashboard /> },
-              { path: "/admin/users", element: <AdminUsersPage /> },
-              { path: "/admin/issue-types", element: <AdminIssueTypesPage /> },
-              { path: "/admin/issues", element: <AdminIssuesPage /> },
-              { path: "/admin/analytics", element: <AnalyticsPage /> },
+              { path: "/admin/dashboard", element: withSuspense(<AdminDashboard />) },
+              { path: "/admin/users", element: withSuspense(<AdminUsersPage />) },
+              { path: "/admin/issue-types", element: withSuspense(<AdminIssueTypesPage />) },
+              { path: "/admin/issues", element: withSuspense(<AdminIssuesPage />) },
+              { path: "/admin/analytics", element: withSuspense(<AnalyticsPage />) },
             ],
           },
         ],
