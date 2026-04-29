@@ -6,6 +6,7 @@ import { Alert } from "../../components/ui/Alert.jsx";
 import { ToastNotification } from "../../components/ui/ToastNotification.jsx";
 import { errorMessage } from "../../lib/apiResponse";
 import { pushRouteToast } from "../../lib/toast";
+import { isStrongPassword, isValidEmail, isValidIndianMobile } from "../../lib/validation";
 
 const LOGO_SRC = "/logo.png";
 
@@ -25,16 +26,6 @@ export function RegisterPage() {
   function showError(message) {
     setError(message);
     setToast({ message, tone: "danger" });
-  }
-
-  function isValidMobile(mobile) {
-    // Accepts Indian mobile format: 10 digits starting with 6-9.
-    return /^[6-9]\d{9}$/.test(mobile);
-  }
-
-  function isStrongPassword(password) {
-    // Minimum 8 chars with uppercase, lowercase, digit, and special character.
-    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/.test(password);
   }
 
   function update(field, value) {
@@ -62,12 +53,16 @@ export function RegisterPage() {
       showError("Email is required.");
       return;
     }
+    if (!isValidEmail(form.email)) {
+      showError("Enter a valid email address.");
+      return;
+    }
     const normalizedMobile = form.mobile.trim();
     if (!normalizedMobile) {
       showError("Mobile number is required.");
       return;
     }
-    if (!isValidMobile(normalizedMobile)) {
+    if (!isValidIndianMobile(normalizedMobile)) {
       showError("Enter a valid mobile number (10 digits starting with 6-9).");
       return;
     }
@@ -107,12 +102,14 @@ export function RegisterPage() {
       <div className="auth-layout">
         <div className="auth-illustration">
           <div className="auth-illustration-header">
-            <div className="auth-brand-chip">
-              <span className="auth-brand-mark auth-brand-mark-dark">
-                <img alt="Cittilenz logo" className="auth-brand-logo" height="28" src={LOGO_SRC} width="28" />
-              </span>
-              <span>Cittilenz</span>
-            </div>
+            <Link to="/" className="auth-brand-chip-link">
+              <div className="auth-brand-chip">
+                <span className="auth-brand-mark auth-brand-mark-dark">
+                  <img alt="Cittilenz logo" className="auth-brand-logo" height="28" src={LOGO_SRC} width="28" />
+                </span>
+                <span>Cittilenz</span>
+              </div>
+            </Link>
           </div>
 
           <AnimatedCharactersPanel />
@@ -120,12 +117,14 @@ export function RegisterPage() {
 
         <div className="auth-form-area">
           <div className="auth-form-panel auth-form-panel-wide">
-            <div className="auth-mobile-brand">
-              <div className="auth-brand-mark auth-brand-mark-light">
-                <img alt="Cittilenz logo" className="auth-brand-logo" height="28" src={LOGO_SRC} width="28" />
+            <Link to="/" className="auth-mobile-brand-link">
+              <div className="auth-mobile-brand">
+                <div className="auth-brand-mark auth-brand-mark-light">
+                  <img alt="Cittilenz logo" className="auth-brand-logo" height="28" src={LOGO_SRC} width="28" />
+                </div>
+                <span>Cittilenz</span>
               </div>
-              <span>Cittilenz</span>
-            </div>
+            </Link>
 
             <div className="auth-heading-block">
               <h1>Create your account</h1>
@@ -138,20 +137,20 @@ export function RegisterPage() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="auth-form auth-form-grid">
+            <form onSubmit={handleSubmit} className="auth-form auth-form-grid" noValidate>
               <div className="auth-field-group">
                 <label htmlFor="username">Username</label>
-                <input id="username" value={form.username} onChange={(event) => update("username", event.target.value)} required />
+                <input id="username" value={form.username} onChange={(event) => update("username", event.target.value)} />
               </div>
 
               <div className="auth-field-group">
                 <label htmlFor="fullName">Full name</label>
-                <input id="fullName" value={form.fullName} onChange={(event) => update("fullName", event.target.value)} required />
+                <input id="fullName" value={form.fullName} onChange={(event) => update("fullName", event.target.value)} />
               </div>
 
               <div className="auth-field-group">
                 <label htmlFor="email">Email</label>
-                <input id="email" type="email" value={form.email} onChange={(event) => update("email", event.target.value)} required />
+                <input id="email" inputMode="email" value={form.email} onChange={(event) => update("email", event.target.value)} />
               </div>
 
               <div className="auth-field-group">
@@ -162,18 +161,17 @@ export function RegisterPage() {
                   maxLength={10}
                   value={form.mobile}
                   onChange={(event) => update("mobile", event.target.value.replace(/\D/g, ""))}
-                  required
                 />
               </div>
 
               <div className="auth-field-group">
                 <label htmlFor="password">Password</label>
-                <input id="password" type="password" minLength={8} value={form.password} onChange={(event) => update("password", event.target.value)} required />
+                <input id="password" type="password" value={form.password} onChange={(event) => update("password", event.target.value)} />
               </div>
 
               <div className="auth-field-group">
                 <label htmlFor="confirmPassword">Confirm password</label>
-                <input id="confirmPassword" type="password" minLength={8} value={form.confirmPassword} onChange={(event) => update("confirmPassword", event.target.value)} required />
+                <input id="confirmPassword" type="password" value={form.confirmPassword} onChange={(event) => update("confirmPassword", event.target.value)} />
               </div>
 
               <button type="submit" className="primary-button auth-submit auth-submit-wide" disabled={loading}>

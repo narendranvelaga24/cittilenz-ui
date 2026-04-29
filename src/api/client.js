@@ -21,8 +21,8 @@ api.interceptors.response.use(
     // Handle token expiration / invalid JWT
     if (error.response?.status === 401) {
       clearSession();
-      if (window.location.pathname !== "/login") {
-        window.location.assign("/login");
+      if (window.location.pathname !== "/") {
+        window.location.assign("/");
       }
     }
     // Handle 403 (Access Denied) - don't redirect, let component handle UI

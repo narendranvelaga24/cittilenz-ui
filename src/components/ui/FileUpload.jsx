@@ -11,7 +11,6 @@ export function FileUpload({
   maxSize = DEFAULT_MAX_SIZE,
   onChange,
   onError,
-  required,
   value,
   variant = "default",
 }) {
@@ -68,7 +67,7 @@ export function FileUpload({
           </span>
         )}
       </label>
-      <input accept={accept} id={inputId} onChange={handleChange} required={required && !value} type="file" />
+      <input accept={accept} id={inputId} onChange={handleChange} type="file" />
       {value && (
         <div className="file-upload-meta">
           <span>{value.name}</span>

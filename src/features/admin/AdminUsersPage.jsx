@@ -21,6 +21,7 @@ import { PageHeader } from "../../components/ui/PageHeader.jsx";
 import { Pagination } from "../../components/ui/Pagination.jsx";
 import { ToastNotification } from "../../components/ui/ToastNotification.jsx";
 import { errorMessage } from "../../lib/apiResponse";
+import { isValidEmail, isValidIndianMobile } from "../../lib/validation";
 
 const PAGE_SIZE = 10;
 
@@ -30,6 +31,9 @@ export function AdminUsersPage() {
   const [isCreateUserDialogOpen, setIsCreateUserDialogOpen] = useState(false);
   const [editingUserId, setEditingUserId] = useState(null);
   const [viewingUserId, setViewingUserId] = useState(null);
+  const [resetPasswordUserId, setResetPasswordUserId] = useState(null);
+  const [deleteUserId, setDeleteUserId] = useState(null);
+  const [resetPasswordForm, setResetPasswordForm] = useState({ password: "", confirmPassword: "" });
   const [editForm, setEditForm] = useState({ fullName: "", email: "", mobile: "", wardId: "", departmentId: "", isActive: "" });
   const [toastMessage, setToastMessage] = useState("");
   const [message, setMessage] = useState("");
@@ -108,6 +112,38 @@ export function AdminUsersPage() {
 
     if (role !== "OFFICIAL" && role !== "WARD_SUPERIOR") {
       setError("Role must be OFFICIAL or WARD_SUPERIOR.");
+      return;
+    }
+    if (!normalizedUsername) {
+      setError("Username is required.");
+      return;
+    }
+    if (/\s/.test(normalizedUsername)) {
+      setError("Username must not contain spaces.");
+      return;
+    }
+    if (!form.fullName.trim()) {
+      setError("Full name is required.");
+      return;
+    }
+    if (!normalizedEmail) {
+      setError("Email is required.");
+      return;
+    }
+    if (!isValidEmail(normalizedEmail)) {
+      setError("Enter a valid email address.");
+      return;
+    }
+    if (!normalizedMobile) {
+      setError("Mobile is required.");
+      return;
+    }
+    if (!isValidIndianMobile(normalizedMobile)) {
+      setError("Enter a valid mobile number (10 digits starting with 6-9).");
+      return;
+    }
+    if (form.password.length < 8) {
+      setError("Password must be at least 8 characters.");
       return;
     }
     if (!form.wardId) {
@@ -191,8 +227,16 @@ export function AdminUsersPage() {
       setError("Email is required.");
       return;
     }
+    if (!isValidEmail(normalizedEmail)) {
+      setError("Enter a valid email address.");
+      return;
+    }
     if (!normalizedMobile) {
       setError("Mobile is required.");
+      return;
+    }
+    if (!isValidIndianMobile(normalizedMobile)) {
+      setError("Enter a valid mobile number (10 digits starting with 6-9).");
       return;
     }
 
@@ -249,6 +293,42 @@ export function AdminUsersPage() {
   const rangeEnd = Math.min(start + PAGE_SIZE, sortedUsers.length);
   const editingUser = users.find((user) => user.id === editingUserId) || null;
   const viewingUser = users.find((user) => user.id === viewingUserId) || null;
+  const resetPasswordUser = users.find((user) => user.id === resetPasswordUserId) || null;
+  const deleteUser = users.find((user) => user.id === deleteUserId) || null;
+
+  function closeResetPasswordDialog() {
+    setResetPasswordUserId(null);
+    setResetPasswordForm({ password: "", confirmPassword: "" });
+  }
+
+  function submitResetPassword(event) {
+    event.preventDefault();
+    if (!resetPasswordUser) return;
+    if (resetPasswordForm.password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+    if (resetPasswordForm.password !== resetPasswordForm.confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    setError("");
+    resetPasswordMutation.mutate(
+      { id: resetPasswordUser.id, password: resetPasswordForm.password },
+      { onSuccess: closeResetPasswordDialog },
+    );
+  }
+
+  function confirmDeleteUser() {
+    if (!deleteUser) return;
+    deleteMutation.mutate(deleteUser.id, {
+      onSuccess: () => {
+        if (editingUserId === deleteUser.id) cancelEdit();
+        setDeleteUserId(null);
+      },
+    });
+  }
 
   const columns = [
     { key: "fullName", header: "Name" },
@@ -321,16 +401,16 @@ export function AdminUsersPage() {
               Add a new staff account with role and assignment details.
             </DialogDescription>
           </DialogHeader>
-          <form className="form-grid" onSubmit={submit}>
+          <form className="form-grid" onSubmit={submit} noValidate>
             <FormField label="Role"><select value={form.role} onChange={(event) => update("role", event.target.value)}><option value="OFFICIAL">Official</option><option value="WARD_SUPERIOR">Ward superior</option></select></FormField>
-            <FormField label="Username"><input value={form.username} onChange={(event) => update("username", event.target.value)} required /></FormField>
-            <FormField label="Full name"><input value={form.fullName} onChange={(event) => update("fullName", event.target.value)} required /></FormField>
-            <FormField label="Email"><input type="email" value={form.email} onChange={(event) => update("email", event.target.value)} required /></FormField>
-            <FormField label="Mobile"><input value={form.mobile} onChange={(event) => update("mobile", event.target.value)} required /></FormField>
-            <FormField label="Password"><input type="password" minLength={8} value={form.password} onChange={(event) => update("password", event.target.value)} required /></FormField>
-            <FormField label="Ward"><select value={form.wardId} onChange={(event) => update("wardId", event.target.value)} required><option value="">Select ward</option>{wards.map((ward) => <option key={ward.id} value={ward.id}>{ward.wardName}</option>)}</select></FormField>
+            <FormField label="Username"><input value={form.username} onChange={(event) => update("username", event.target.value)} /></FormField>
+            <FormField label="Full name"><input value={form.fullName} onChange={(event) => update("fullName", event.target.value)} /></FormField>
+            <FormField label="Email"><input inputMode="email" value={form.email} onChange={(event) => update("email", event.target.value)} /></FormField>
+            <FormField label="Mobile"><input inputMode="numeric" maxLength={10} value={form.mobile} onChange={(event) => update("mobile", event.target.value.replace(/\D/g, ""))} /></FormField>
+            <FormField label="Password"><input type="password" value={form.password} onChange={(event) => update("password", event.target.value)} /></FormField>
+            <FormField label="Ward"><select value={form.wardId} onChange={(event) => update("wardId", event.target.value)}><option value="">Select ward</option>{wards.map((ward) => <option key={ward.id} value={ward.id}>{ward.wardName}</option>)}</select></FormField>
             {form.role === "OFFICIAL" && (
-              <FormField label="Department"><select value={form.departmentId} onChange={(event) => update("departmentId", event.target.value)} required><option value="">Select department</option>{departments.map((dept) => <option key={dept.id} value={dept.id}>{dept.name}</option>)}</select></FormField>
+              <FormField label="Department"><select value={form.departmentId} onChange={(event) => update("departmentId", event.target.value)}><option value="">Select department</option>{departments.map((dept) => <option key={dept.id} value={dept.id}>{dept.name}</option>)}</select></FormField>
             )}
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsCreateUserDialogOpen(false)}>Cancel</Button>
@@ -418,7 +498,7 @@ export function AdminUsersPage() {
                 <Label htmlFor="admin-user-email">Email</Label>
                 <Input
                   id="admin-user-email"
-                  type="email"
+                  inputMode="email"
                   value={editForm.email}
                   onChange={(event) => updateEdit("email", event.target.value)}
                 />
@@ -428,8 +508,10 @@ export function AdminUsersPage() {
                 <Label htmlFor="admin-user-mobile">Mobile</Label>
                 <Input
                   id="admin-user-mobile"
+                  inputMode="numeric"
+                  maxLength={10}
                   value={editForm.mobile}
-                  onChange={(event) => updateEdit("mobile", event.target.value)}
+                  onChange={(event) => updateEdit("mobile", event.target.value.replace(/\D/g, ""))}
                 />
               </div>
 
@@ -488,11 +570,7 @@ export function AdminUsersPage() {
               <Button
                 type="button"
                 variant="secondary"
-                onClick={() => {
-                  const password = window.prompt("Enter new password (min 8 characters)");
-                  if (!password || password.length < 8) return;
-                  resetPasswordMutation.mutate({ id: editingUser.id, password });
-                }}
+                onClick={() => setResetPasswordUserId(editingUser.id)}
               >
                 Reset password
               </Button>
@@ -502,18 +580,61 @@ export function AdminUsersPage() {
               <Button
                 type="button"
                 variant="destructive"
-                onClick={() => {
-                  if (!window.confirm(`Delete user ${editingUser.username || editingUser.fullName}? This cannot be undone.`)) return;
-                  deleteMutation.mutate(editingUser.id, {
-                    onSuccess: () => {
-                      cancelEdit();
-                    },
-                  });
-                }}
+                onClick={() => setDeleteUserId(editingUser.id)}
               >
                 Delete user
               </Button>
             )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(resetPasswordUser)} onOpenChange={(open) => !open && closeResetPasswordDialog()}>
+        <DialogContent className="admin-edit-dialog">
+          <DialogHeader>
+            <DialogTitle>Reset password</DialogTitle>
+            <DialogDescription>
+              Set a new password for {resetPasswordUser?.username || resetPasswordUser?.fullName || "this user"}.
+            </DialogDescription>
+          </DialogHeader>
+          <form className="form-grid" onSubmit={submitResetPassword} noValidate>
+            <FormField label="New password">
+              <input
+                type="password"
+                value={resetPasswordForm.password}
+                onChange={(event) => setResetPasswordForm((current) => ({ ...current, password: event.target.value }))}
+              />
+            </FormField>
+            <FormField label="Confirm new password">
+              <input
+                type="password"
+                value={resetPasswordForm.confirmPassword}
+                onChange={(event) => setResetPasswordForm((current) => ({ ...current, confirmPassword: event.target.value }))}
+              />
+            </FormField>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={closeResetPasswordDialog}>Cancel</Button>
+              <Button type="submit" disabled={resetPasswordMutation.isPending}>
+                {resetPasswordMutation.isPending ? "Resetting..." : "Reset password"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={Boolean(deleteUser)} onOpenChange={(open) => !open && setDeleteUserId(null)}>
+        <DialogContent className="admin-edit-dialog">
+          <DialogHeader>
+            <DialogTitle>Delete user?</DialogTitle>
+            <DialogDescription>
+              Delete {deleteUser?.username || deleteUser?.fullName || "this user"} permanently. This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setDeleteUserId(null)}>Cancel</Button>
+            <Button type="button" variant="destructive" onClick={confirmDeleteUser} disabled={deleteMutation.isPending}>
+              {deleteMutation.isPending ? "Deleting..." : "Delete user"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

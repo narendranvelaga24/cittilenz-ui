@@ -2,9 +2,19 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { deactivateAccount, deleteAccount, getUserProfile, changePassword, updateProfile } from "../../api/users.api";
 import { Alert } from "../../components/ui/Alert.jsx";
+import { Button } from "../../components/ui/button.jsx";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog.jsx";
 import { PageHeader } from "../../components/ui/PageHeader.jsx";
 import { ToastNotification } from "../../components/ui/ToastNotification.jsx";
 import { errorMessage } from "../../lib/apiResponse";
+import { isValidEmail, isValidIndianMobile } from "../../lib/validation";
 import { useAuth } from "../auth/useAuth";
 
 export function ProfilePage() {
@@ -21,6 +31,7 @@ export function ProfilePage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [toastMessage, setToastMessage] = useState("");
+  const [accountAction, setAccountAction] = useState("");
 
   useEffect(() => {
     if (!toastMessage) return;
@@ -73,6 +84,14 @@ export function ProfilePage() {
     }
     setError("");
     setMessage("");
+    if (form.email && !isValidEmail(form.email)) {
+      setError("Enter a valid email address.");
+      return;
+    }
+    if (form.mobile && !isValidIndianMobile(form.mobile)) {
+      setError("Enter a valid mobile number (10 digits starting with 6-9).");
+      return;
+    }
     const changes = {};
     for (const field of ["fullName", "email", "mobile"]) {
       if (form[field] !== (user[field] || "")) changes[field] = form[field];
@@ -98,6 +117,10 @@ export function ProfilePage() {
       setError("Password change is available only for citizen accounts in this backend.");
       return;
     }
+    if (!passwordForm.oldPassword) {
+      setError("Current password is required.");
+      return;
+    }
     if (!passwordForm.newPassword || passwordForm.newPassword.length < 8) {
       setError("New password must be at least 8 characters.");
       return;
@@ -116,12 +139,12 @@ export function ProfilePage() {
   }
 
   function handleDeactivate() {
-    if (!window.confirm("Deactivate your account? You will be logged out immediately.")) return;
+    setAccountAction("");
     deactivateMutation.mutate();
   }
 
   function handleDelete() {
-    if (!window.confirm("Delete your account permanently? This cannot be undone.")) return;
+    setAccountAction("");
     deleteMutation.mutate();
   }
 
@@ -132,18 +155,18 @@ export function ProfilePage() {
       {message && <Alert tone="success">{message}</Alert>}
       {error && <Alert tone="danger">{error}</Alert>}
       <div className="detail-grid">
-        <form className="panel form-grid" onSubmit={submit}>
+        <form className="panel form-grid" onSubmit={submit} noValidate>
           <label>Full name<input value={form.fullName} onChange={(event) => update("fullName", event.target.value)} disabled={!isCitizen} /></label>
-          <label>Email<input type="email" value={form.email} onChange={(event) => update("email", event.target.value)} disabled={!isCitizen} /></label>
+          <label>Email<input inputMode="email" value={form.email} onChange={(event) => update("email", event.target.value)} disabled={!isCitizen} /></label>
           <label>Mobile<input value={form.mobile} onChange={(event) => update("mobile", event.target.value)} disabled={!isCitizen} /></label>
           {isCitizen ? <button className="primary-button">Save changes</button> : <p className="muted">This role is read-only in profile update APIs.</p>}
         </form>
         {isCitizen && (
-          <form className="panel form-grid" onSubmit={submitPassword}>
+          <form className="panel form-grid" onSubmit={submitPassword} noValidate>
             <h2>Change password</h2>
-            <label>Current password<input type="password" value={passwordForm.oldPassword} onChange={(event) => updatePassword("oldPassword", event.target.value)} required /></label>
-            <label>New password<input type="password" minLength={8} value={passwordForm.newPassword} onChange={(event) => updatePassword("newPassword", event.target.value)} required /></label>
-            <label>Confirm new password<input type="password" minLength={8} value={passwordForm.confirmNewPassword} onChange={(event) => updatePassword("confirmNewPassword", event.target.value)} required /></label>
+            <label>Current password<input type="password" value={passwordForm.oldPassword} onChange={(event) => updatePassword("oldPassword", event.target.value)} /></label>
+            <label>New password<input type="password" value={passwordForm.newPassword} onChange={(event) => updatePassword("newPassword", event.target.value)} /></label>
+            <label>Confirm new password<input type="password" value={passwordForm.confirmNewPassword} onChange={(event) => updatePassword("confirmNewPassword", event.target.value)} /></label>
             <button className="primary-button" disabled={changePasswordMutation.isPending || passwordForm.newPassword.length < 8 || passwordForm.newPassword !== passwordForm.confirmNewPassword}>
               {changePasswordMutation.isPending ? "Changing..." : "Change password"}
             </button>
@@ -157,16 +180,39 @@ export function ProfilePage() {
           </dl>
           {isCitizen && (
             <div className="action-cell">
-              <button type="button" className="secondary-button" onClick={handleDeactivate} disabled={deactivateMutation.isPending}>
+              <button type="button" className="secondary-button" onClick={() => setAccountAction("deactivate")} disabled={deactivateMutation.isPending}>
                 {deactivateMutation.isPending ? "Deactivating..." : "Deactivate account"}
               </button>
-              <button type="button" className="danger-button" onClick={handleDelete} disabled={deleteMutation.isPending}>
+              <button type="button" className="danger-button" onClick={() => setAccountAction("delete")} disabled={deleteMutation.isPending}>
                 {deleteMutation.isPending ? "Deleting..." : "Delete account"}
               </button>
             </div>
           )}
         </div>
       </div>
+      <Dialog open={Boolean(accountAction)} onOpenChange={(open) => !open && setAccountAction("")}>
+        <DialogContent className="admin-edit-dialog">
+          <DialogHeader>
+            <DialogTitle>{accountAction === "delete" ? "Delete account?" : "Deactivate account?"}</DialogTitle>
+            <DialogDescription>
+              {accountAction === "delete"
+                ? "This permanently removes your citizen account and cannot be undone."
+                : "This deactivates your citizen account and logs you out immediately."}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setAccountAction("")}>Cancel</Button>
+            <Button
+              type="button"
+              variant={accountAction === "delete" ? "destructive" : "secondary"}
+              onClick={accountAction === "delete" ? handleDelete : handleDeactivate}
+              disabled={deactivateMutation.isPending || deleteMutation.isPending}
+            >
+              {accountAction === "delete" ? "Delete account" : "Deactivate account"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

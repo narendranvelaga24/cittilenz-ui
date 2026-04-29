@@ -1,7 +1,8 @@
 import { ArrowRight, Building2, Camera, MapPin, Menu, Sparkles, TimerReset, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { ThemeSwitch } from "../../components/ui/ThemeSwitch.jsx";
+import { useClickOutside } from "../../hooks/useClickOutside.js";
 import { getHomeForRole } from "../../lib/roles";
 import { useAuth } from "../auth/useAuth";
 
@@ -45,6 +46,9 @@ const navItems = [
 export function LandingPage() {
   const { booting, isAuthenticated, user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mobileNavRef = useRef(null);
+
+  useClickOutside(mobileNavRef, () => setMobileMenuOpen(false), mobileMenuOpen);
 
   useEffect(() => {
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -83,6 +87,19 @@ export function LandingPage() {
     };
   }, []);
 
+  function handleAnchorClick(event, href) {
+    const target = document.querySelector(href);
+    if (!target) return;
+
+    event.preventDefault();
+    setMobileMenuOpen(false);
+    target.scrollIntoView({
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      block: "start",
+    });
+    window.history.pushState(null, "", href);
+  }
+
   if (booting) return <div className="screen-message">Opening Cittilenz...</div>;
   if (isAuthenticated) return <Navigate to={getHomeForRole(user.role)} replace />;
 
@@ -100,12 +117,12 @@ export function LandingPage() {
             item.to ? (
               <Link key={item.label} to={item.to}>{item.label}</Link>
             ) : (
-              <a href={item.href} key={item.label}>{item.label}</a>
+              <a href={item.href} key={item.label} onClick={(event) => handleAnchorClick(event, item.href)}>{item.label}</a>
             ),
           )}
           <ThemeSwitch />
         </nav>
-        <div className="landing-mobile-nav">
+        <div className="landing-mobile-nav" ref={mobileNavRef}>
           <button
             aria-controls="landing-mobile-menu"
             aria-expanded={mobileMenuOpen}
@@ -124,7 +141,7 @@ export function LandingPage() {
                     {item.label}
                   </Link>
                 ) : (
-                  <a href={item.href} key={item.label} onClick={() => setMobileMenuOpen(false)}>
+                  <a href={item.href} key={item.label} onClick={(event) => handleAnchorClick(event, item.href)}>
                     {item.label}
                   </a>
                 ),
@@ -148,7 +165,7 @@ export function LandingPage() {
               Report as citizen
               <ArrowRight size={18} />
             </Link>
-            <Link className="lux-button outline official-login-link" to="/login">Official login</Link>
+            <Link className="lux-button outline official-login-link" to="/login">Login</Link>
           </div>
         </div>
 
@@ -236,10 +253,10 @@ export function LandingPage() {
           <p>Geo-tagged reporting, official workflows, and SLA visibility for cleaner civic response.</p>
         </div>
         <nav className="landing-footer-links" aria-label="Footer navigation">
-          <a href="#how-it-works">How it works</a>
-          <a href="#roles">Roles</a>
-          <Link to="/login">Official login</Link>
-          <Link to="/register">Citizen signup</Link>
+          <a href="#how-it-works" onClick={(event) => handleAnchorClick(event, "#how-it-works")}>How it works</a>
+          <a href="#roles" onClick={(event) => handleAnchorClick(event, "#roles")}>Roles</a>
+          <Link to="/login">Login</Link>
+          <Link to="/register">Signup</Link>
         </nav>
         <p className="landing-footer-meta">
           © {new Date().getFullYear()} Cittilenz. Built for accountable civic action.

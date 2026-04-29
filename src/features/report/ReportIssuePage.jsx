@@ -213,6 +213,14 @@ export function ReportIssuePage() {
 
   async function submitIssue(event) {
     event.preventDefault();
+    if (!form.title.trim()) {
+      showToast("Title is required.", "danger");
+      return;
+    }
+    if (!form.description.trim()) {
+      showToast("Description is required.", "danger");
+      return;
+    }
     if (!coords || !ward) {
       showToast("Capture a valid location and ward before submitting.", "danger");
       return;
@@ -271,23 +279,22 @@ export function ReportIssuePage() {
         ariaLive="polite"
       />
       <PageHeader eyebrow="Citizen flow" title="Report a civic issue" description="Capture evidence, verify the ward, let AI assist, then submit." />
-      <form className="report-grid report-grid-split" onSubmit={submitIssue}>
+      <form className="report-grid report-grid-split" onSubmit={submitIssue} noValidate>
         <div className="panel form-grid report-form-card">
-          <label>Title<input value={form.title} onChange={(event) => update("title", event.target.value)} required /></label>
-          <label>Description<textarea rows={5} value={form.description} onChange={(event) => update("description", event.target.value)} required /></label>
+          <label>Title<input value={form.title} onChange={(event) => update("title", event.target.value)} /></label>
+          <label>Description<textarea rows={5} value={form.description} onChange={(event) => update("description", event.target.value)} /></label>
           <button type="button" className="secondary-button report-liquid-button" onClick={captureLocation} disabled={loadingStep === "location"}>
             {loadingStep === "location" ? "Detecting location..." : "Capture GPS location"}
           </button>
-          <label>Latitude<input value={coords?.lat ?? ""} readOnly placeholder="Capture GPS to fill" required /></label>
-          <label>Longitude<input value={coords?.lng ?? ""} readOnly placeholder="Capture GPS to fill" required /></label>
-          <label>Ward<input value={ward ? `${ward.wardName} (#${ward.wardNumber})` : ""} readOnly placeholder="Ward will appear after GPS capture" required /></label>
+          <label>Latitude<input value={coords?.lat ?? ""} readOnly placeholder="Capture GPS to fill" /></label>
+          <label>Longitude<input value={coords?.lng ?? ""} readOnly placeholder="Capture GPS to fill" /></label>
+          <label>Ward<input value={ward ? `${ward.wardName} (#${ward.wardNumber})` : ""} readOnly placeholder="Ward will appear after GPS capture" /></label>
           <FileUpload
             buttonText="Upload issue photo"
             label="Issue image"
             maxSize={MAX_IMAGE_SIZE}
             onChange={handleImage}
             onError={(nextError) => showToast(nextError, "danger")}
-            required
             value={image}
           />
           <button type="button" className="secondary-button report-liquid-button" onClick={analyzeImage} disabled={!image || loadingStep === "ai"}>
@@ -300,14 +307,14 @@ export function ReportIssuePage() {
               const nextIssueType = issueTypes.find((type) => String(type.id) === nextIssueTypeId) || null;
               setIssueTypeId(nextIssueTypeId);
               setSelectedIssueType(nextIssueType);
-            }} disabled={issueTypesLoading} required>
+            }} disabled={issueTypesLoading}>
               <option value="">Select issue type</option>
               {issueTypes.map((type) => (
                 <option key={type.id} value={type.id}>{type.displayName}</option>
               ))}
             </select>
           </label>
-          <label>Department<input value={selectedIssueType?.departmentName || ""} readOnly placeholder="Department will be derived from AI or issue type" required /></label>
+          <label>Department<input value={selectedIssueType?.departmentName || ""} readOnly placeholder="Department will be derived from AI or issue type" /></label>
           <button className="primary-button report-submit-button" disabled={loadingStep === "submit"}>{loadingStep === "submit" ? "Submitting..." : "Submit issue"}</button>
         </div>
         <aside className="panel status-panel report-status-card">

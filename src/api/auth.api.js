@@ -6,6 +6,10 @@ export async function login(payload) {
   return unwrapResponse(await api.post("/auth/login", payload));
 }
 
+export async function forgotPassword(payload) {
+  return unwrapResponse(await api.post("/auth/forgot-password", payload));
+}
+
 export async function getCurrentUser() {
   return fetchCurrentUser();
 }

@@ -4,7 +4,16 @@ import { getIssueById, getRoleIssues, reassignIssue, supervisorClear, supervisor
 import { getDepartments } from "../../api/departments.api";
 import { IssueDetailsDialog } from "../../components/issues/IssueDetailsDialog.jsx";
 import { IssueStatusBadge } from "../../components/issues/IssueStatusBadge.jsx";
+import { Button } from "../../components/ui/button.jsx";
 import { DataTable } from "../../components/ui/DataTable.jsx";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog.jsx";
 import { OpenStreetMapAttribution } from "../../components/ui/OpenStreetMapAttribution.jsx";
 import { PageHeader } from "../../components/ui/PageHeader.jsx";
 import { Pagination } from "../../components/ui/Pagination.jsx";
@@ -94,6 +103,8 @@ export function SuperiorIssuesPage() {
   const [selectedIssue, setSelectedIssue] = useState(null);
   const [debouncedDepartmentId, setDebouncedDepartmentId] = useState("");
   const [debouncedReportedBy, setDebouncedReportedBy] = useState("");
+  const [clearingIssue, setClearingIssue] = useState(null);
+  const [clearRemarks, setClearRemarks] = useState("");
 
   // Debounce filter inputs to prevent excessive API calls per contract
   useEffect(() => {
@@ -269,16 +280,21 @@ export function SuperiorIssuesPage() {
     onError: (err) => showToast(errorMessage(err), "danger"),
   });
 
-  async function clearIntervention(issue) {
-    const remarks = window.prompt("Enter supervisor remarks");
-    if (!remarks) return;
+  async function submitClearIntervention(event) {
+    event.preventDefault();
+    const remarks = clearRemarks.trim();
+    if (!clearingIssue) return;
+    if (!remarks) {
+      showToast("Supervisor remarks are required.", "danger");
+      return;
+    }
     try {
-      const updatedIssue = await supervisorClear(issue.id, { version: issue.version, remarks });
-      const detailIssue = await getIssueById(issue.id).catch(() => null);
+      const updatedIssue = await supervisorClear(clearingIssue.id, { version: clearingIssue.version, remarks });
+      const detailIssue = await getIssueById(clearingIssue.id).catch(() => null);
       const canonicalIssue = {
         ...updatedIssue,
         ...(detailIssue || {}),
-        status: normalizeStatus(detailIssue?.status || updatedIssue?.status || issue.status),
+        status: normalizeStatus(detailIssue?.status || updatedIssue?.status || clearingIssue.status),
       };
 
       rememberCanonicalIssue(canonicalIssue);
@@ -287,7 +303,7 @@ export function SuperiorIssuesPage() {
         return {
           ...current,
           content: current.content.map((row) => (
-            String(row.id) === String(issue.id)
+            String(row.id) === String(clearingIssue.id)
               ? {
                   ...row,
                   ...canonicalIssue,
@@ -297,6 +313,8 @@ export function SuperiorIssuesPage() {
         };
       });
       showToast("Intervention cleared.", "success");
+      setClearingIssue(null);
+      setClearRemarks("");
       await queryClient.refetchQueries({ queryKey: ["superior-issues"], type: "active" });
     } catch (err) {
       showToast(errorMessage(err), "danger");
@@ -375,7 +393,7 @@ export function SuperiorIssuesPage() {
           </button>
           {issue.status === "ESCALATED" && <button disabled={reassignMutation.isPending} onClick={() => reassignMutation.mutate({ id: issue.id, version: issue.version })}>{reassignMutation.isPending ? "Reassigning..." : "Reassign"}</button>}
           {issue.status === "ASSIGNED" && issue.requiresSupervisorIntervention && <button disabled={supervisorReassignMutation.isPending} onClick={() => supervisorReassignMutation.mutate({ id: issue.id, version: issue.version })}>{supervisorReassignMutation.isPending ? "Reassigning..." : "Supervisor reassign"}</button>}
-          {issue.status === "ASSIGNED" && issue.requiresSupervisorIntervention && <button onClick={() => clearIntervention(issue)}>Clear</button>}
+          {issue.status === "ASSIGNED" && issue.requiresSupervisorIntervention && <button onClick={() => setClearingIssue(issue)}>Clear</button>}
           {issue.requiresSupervisorIntervention && issue.status !== "ASSIGNED" && <span className="action-note">Intervention flag present, but only ASSIGNED issues can be supervisor-reassigned.</span>}
           {issue.status !== "ESCALATED" && !issue.requiresSupervisorIntervention && <span className="action-note">No action needed</span>}
         </div>
@@ -479,6 +497,37 @@ export function SuperiorIssuesPage() {
           if (!open) setSelectedIssue(null);
         }}
       />
+      <Dialog
+        open={Boolean(clearingIssue)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setClearingIssue(null);
+            setClearRemarks("");
+          }
+        }}
+      >
+        <DialogContent className="admin-edit-dialog">
+          <DialogHeader>
+            <DialogTitle>Clear intervention?</DialogTitle>
+            <DialogDescription>
+              Add supervisor remarks before clearing this intervention flag.
+            </DialogDescription>
+          </DialogHeader>
+          <form className="form-grid" onSubmit={submitClearIntervention} noValidate>
+            <label>
+              Supervisor remarks
+              <textarea rows={4} value={clearRemarks} onChange={(event) => setClearRemarks(event.target.value)} />
+            </label>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => {
+                setClearingIssue(null);
+                setClearRemarks("");
+              }}>Cancel</Button>
+              <Button type="submit">Clear intervention</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

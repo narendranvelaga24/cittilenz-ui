@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Columns, Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { useClickOutside } from "../../hooks/useClickOutside.js";
 import { EmptyState } from "./EmptyState.jsx";
 
 const MotionRow = motion.tr;
@@ -59,6 +60,10 @@ export function DataTable({
   const [internalSearchValue, setInternalSearchValue] = useState("");
   const [internalVisibleColumns, setInternalVisibleColumns] = useState(defaultVisibleColumns);
   const [internalSortState, setInternalSortState] = useState({ key: "", direction: "asc" });
+  const [isColumnMenuOpen, setIsColumnMenuOpen] = useState(false);
+  const columnMenuRef = useRef(null);
+
+  useClickOutside(columnMenuRef, () => setIsColumnMenuOpen(false), isColumnMenuOpen);
 
   const currentSearchValue = searchValue ?? internalSearchValue;
   const currentVisibleColumns = visibleColumns || internalVisibleColumns;
@@ -146,17 +151,26 @@ export function DataTable({
             />
           </label>
           {filters}
-          <details className="table-menu">
-            <summary><Columns size={15} /> Columns</summary>
-            <div className="table-menu-content">
+          <div className="table-menu" ref={columnMenuRef}>
+            <button
+              aria-expanded={isColumnMenuOpen}
+              className="table-menu-trigger"
+              onClick={() => setIsColumnMenuOpen((open) => !open)}
+              type="button"
+            >
+              <Columns size={15} /> Columns
+            </button>
+            {isColumnMenuOpen && (
+            <div className="table-menu-content" role="menu">
               {columns.map((column) => (
-                <label key={column.key}>
+                <label key={column.key} role="menuitem">
                   <input checked={currentVisibleColumns.has(column.key)} onChange={() => toggleColumn(column.key)} type="checkbox" />
                   {column.header || column.key}
                 </label>
               ))}
             </div>
-          </details>
+            )}
+          </div>
         </div>
       </div>
       {isLoading ? (

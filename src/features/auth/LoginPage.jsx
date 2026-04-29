@@ -1,8 +1,18 @@
 import { Eye, EyeOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { forgotPassword } from "../../api/auth.api";
 import { AnimatedCharactersPanel } from "../../components/auth/AnimatedCharactersPanel.jsx";
 import { Alert } from "../../components/ui/Alert.jsx";
+import { Button } from "../../components/ui/button.jsx";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog.jsx";
 import { ToastNotification } from "../../components/ui/ToastNotification.jsx";
 import { errorMessage } from "../../lib/apiResponse";
 import { getHomeForRole } from "../../lib/roles";
@@ -21,6 +31,11 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotForm, setForgotForm] = useState({ identifier: "", newPassword: "", confirmPassword: "" });
+  const [forgotError, setForgotError] = useState("");
+  const [forgotSuccess, setForgotSuccess] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
 
   useEffect(() => {
     setIsTyping(Boolean(form.identifier || form.password));
@@ -73,18 +88,69 @@ export function LoginPage() {
     }
   }
 
+  function updateForgot(field, value) {
+    setForgotForm((current) => ({ ...current, [field]: value }));
+  }
+
+  function closeForgotDialog(open) {
+    setForgotOpen(open);
+    if (!open) {
+      setForgotForm({ identifier: "", newPassword: "", confirmPassword: "" });
+      setForgotError("");
+      setForgotSuccess("");
+      setForgotLoading(false);
+    }
+  }
+
+  async function handleForgotSubmit(event) {
+    event.preventDefault();
+    setForgotError("");
+    setForgotSuccess("");
+
+    if (!forgotForm.identifier.trim()) {
+      setForgotError("Enter your username or email.");
+      return;
+    }
+    if (forgotForm.newPassword.length < 8) {
+      setForgotError("New password must be at least 8 characters.");
+      return;
+    }
+    if (forgotForm.newPassword !== forgotForm.confirmPassword) {
+      setForgotError("Passwords do not match.");
+      return;
+    }
+
+    setForgotLoading(true);
+    try {
+      await forgotPassword({
+        identifier: forgotForm.identifier.trim(),
+        newPassword: forgotForm.newPassword,
+        confirmPassword: forgotForm.confirmPassword,
+      });
+      setForgotSuccess("Password reset successful. You can log in with the new password now.");
+      setToastMessage("Password reset successful");
+      setForm((current) => ({ ...current, identifier: forgotForm.identifier.trim(), password: "" }));
+    } catch (err) {
+      setForgotError(errorMessage(err) || "Unable to reset password. Please try again.");
+    } finally {
+      setForgotLoading(false);
+    }
+  }
+
   return (
     <main className="auth-page">
       <ToastNotification message={toastMessage} role="status" ariaLive="polite" />
       <div className="auth-layout">
         <div className="auth-illustration">
           <div className="auth-illustration-header">
-            <div className="auth-brand-chip">
-              <span className="auth-brand-mark auth-brand-mark-dark">
-                <img alt="Cittilenz logo" className="auth-brand-logo" height="28" src={LOGO_SRC} width="28" />
-              </span>
-              <span>Cittilenz</span>
-            </div>
+            <Link to="/" className="auth-brand-chip-link">
+              <div className="auth-brand-chip">
+                <span className="auth-brand-mark auth-brand-mark-dark">
+                  <img alt="Cittilenz logo" className="auth-brand-logo" height="28" src={LOGO_SRC} width="28" />
+                </span>
+                <span>Cittilenz</span>
+              </div>
+            </Link>
           </div>
 
           <AnimatedCharactersPanel isTyping={isTyping} showPassword={showPassword} passwordLength={form.password.length} />
@@ -92,12 +158,14 @@ export function LoginPage() {
 
         <div className="auth-form-area">
           <div className="auth-form-panel">
-            <div className="auth-mobile-brand">
-              <div className="auth-brand-mark auth-brand-mark-light">
-                <img alt="Cittilenz logo" className="auth-brand-logo" height="28" src={LOGO_SRC} width="28" />
+            <Link to="/" className="auth-mobile-brand-link">
+              <div className="auth-mobile-brand">
+                <div className="auth-brand-mark auth-brand-mark-light">
+                  <img alt="Cittilenz logo" className="auth-brand-logo" height="28" src={LOGO_SRC} width="28" />
+                </div>
+                <span>Cittilenz</span>
               </div>
-              <span>Cittilenz</span>
-            </div>
+            </Link>
 
             <div className="auth-heading-block">
               <h1>Welcome back!</h1>
@@ -110,7 +178,7 @@ export function LoginPage() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="auth-form">
+            <form onSubmit={handleSubmit} className="auth-form" noValidate>
               <div className="auth-field-group">
                 <label htmlFor="identifier">Email or Username</label>
                 <input
@@ -122,7 +190,6 @@ export function LoginPage() {
                   onChange={(event) => setForm({ ...form, identifier: event.target.value })}
                   onFocus={() => setIsTyping(true)}
                   onBlur={() => setIsTyping(false)}
-                  required
                 />
               </div>
 
@@ -135,7 +202,6 @@ export function LoginPage() {
                     placeholder="••••••••"
                     value={form.password}
                     onChange={(event) => setForm({ ...form, password: event.target.value })}
-                    required
                     onFocus={() => setIsTyping(true)}
                     onBlur={() => setIsTyping(false)}
                   />
@@ -151,7 +217,7 @@ export function LoginPage() {
               </div>
 
               <div className="auth-footer-row">
-                <a href="#">Forgot password?</a>
+                <button className="auth-link-button" onClick={() => setForgotOpen(true)} type="button">Forgot password?</button>
               </div>
 
               <button
@@ -170,6 +236,50 @@ export function LoginPage() {
           </div>
         </div>
       </div>
+      <Dialog open={forgotOpen} onOpenChange={closeForgotDialog}>
+        <DialogContent className="auth-reset-dialog">
+          <DialogHeader>
+            <DialogTitle>Reset password</DialogTitle>
+            <DialogDescription>
+              Enter your username or email and set a new password.
+            </DialogDescription>
+          </DialogHeader>
+          {forgotError && <Alert tone="danger">{forgotError}</Alert>}
+          {forgotSuccess && <Alert tone="success">{forgotSuccess}</Alert>}
+          <form className="form-grid" onSubmit={handleForgotSubmit} noValidate>
+            <label>
+              Username or email
+              <input
+                autoComplete="username"
+                value={forgotForm.identifier}
+                onChange={(event) => updateForgot("identifier", event.target.value)}
+              />
+            </label>
+            <label>
+              New password
+              <input
+                autoComplete="new-password"
+                type="password"
+                value={forgotForm.newPassword}
+                onChange={(event) => updateForgot("newPassword", event.target.value)}
+              />
+            </label>
+            <label>
+              Confirm new password
+              <input
+                autoComplete="new-password"
+                type="password"
+                value={forgotForm.confirmPassword}
+                onChange={(event) => updateForgot("confirmPassword", event.target.value)}
+              />
+            </label>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => closeForgotDialog(false)}>Cancel</Button>
+              <Button type="submit" disabled={forgotLoading}>{forgotLoading ? "Resetting..." : "Reset password"}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }

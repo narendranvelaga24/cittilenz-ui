@@ -8,7 +8,7 @@ export function ProtectedRoute({ roles }) {
   if (booting) return <div className="screen-message">Restoring your session...</div>;
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace state={{ from: location }} />;
+    return <Navigate to="/" replace state={{ from: location }} />;
   }
 
   if (roles?.length && !roles.includes(user.role)) {

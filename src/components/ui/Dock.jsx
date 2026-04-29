@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
-import { createElement, useState } from "react";
+import { createElement, useRef, useState } from "react";
+import { useClickOutside } from "../../hooks/useClickOutside.js";
 import { cn } from "../../lib/utils";
 
 const floatingAnimation = {
@@ -38,6 +39,9 @@ function DockIconButton({ icon: Icon, label, onClick, active, hasMenu, isOpen })
 
 export function Dock({ items, className }) {
   const [openMenu, setOpenMenu] = useState("");
+  const dockRef = useRef(null);
+
+  useClickOutside(dockRef, () => setOpenMenu(""), Boolean(openMenu));
 
   function handleItemClick(item) {
     if (item.children?.length) {
@@ -60,6 +64,7 @@ export function Dock({ items, className }) {
         animate="animate"
         className="mobile-dock"
         initial="initial"
+        ref={dockRef}
         variants={floatingAnimation}
       >
         {items.map((item) => {

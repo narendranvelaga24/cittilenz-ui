@@ -168,7 +168,24 @@ export function AdminIssueTypesPage() {
 
   function submit(event) {
     event.preventDefault();
-    mutation.mutate({ ...form, departmentId: Number(form.departmentId), slaHours: Number(form.slaHours), name: form.name.toUpperCase().replaceAll(" ", "_") });
+    const name = form.name.trim();
+    const departmentId = Number(form.departmentId);
+    const slaHours = Number(form.slaHours);
+
+    if (!name) {
+      showToast("Name is required.", "danger");
+      return;
+    }
+    if (!Number.isFinite(departmentId) || departmentId <= 0) {
+      showToast("Department is required.", "danger");
+      return;
+    }
+    if (!Number.isFinite(slaHours) || slaHours <= 0) {
+      showToast("SLA hours must be greater than 0.", "danger");
+      return;
+    }
+
+    mutation.mutate({ ...form, departmentId, slaHours, name: name.toUpperCase().replaceAll(" ", "_") });
   }
 
   const sortedTypes = [...issueTypes].sort((first, second) => {
@@ -250,10 +267,10 @@ export function AdminIssueTypesPage() {
               Add a new issue type with SLA, priority, and department mapping.
             </DialogDescription>
           </DialogHeader>
-          <form className="form-grid" onSubmit={submit}>
-            <FormField label="Name"><input value={form.name} onChange={(event) => update("name", event.target.value)} placeholder="Pothole" required /></FormField>
-            <FormField label="Department"><select value={form.departmentId} onChange={(event) => update("departmentId", event.target.value)} required><option value="">Select department</option>{departments.map((dept) => <option key={dept.id} value={dept.id}>{dept.name}</option>)}</select></FormField>
-            <FormField label="SLA hours"><input type="number" min={1} value={form.slaHours} onChange={(event) => update("slaHours", event.target.value)} required /></FormField>
+          <form className="form-grid" onSubmit={submit} noValidate>
+            <FormField label="Name"><input value={form.name} onChange={(event) => update("name", event.target.value)} placeholder="Pothole" /></FormField>
+            <FormField label="Department"><select value={form.departmentId} onChange={(event) => update("departmentId", event.target.value)}><option value="">Select department</option>{departments.map((dept) => <option key={dept.id} value={dept.id}>{dept.name}</option>)}</select></FormField>
+            <FormField label="SLA hours"><input inputMode="numeric" value={form.slaHours} onChange={(event) => update("slaHours", event.target.value.replace(/\D/g, ""))} /></FormField>
             <FormField label="Priority"><select value={form.priority} onChange={(event) => update("priority", event.target.value)}><option value="CRITICAL">Critical</option><option value="HIGH">High</option><option value="MEDIUM">Medium</option><option value="LOW">Low</option></select></FormField>
             <FormField label="Description"><textarea rows={4} value={form.description} onChange={(event) => update("description", event.target.value)} /></FormField>
             <DialogFooter>
@@ -303,10 +320,9 @@ export function AdminIssueTypesPage() {
                 <Label htmlFor="admin-issue-type-sla">SLA hours</Label>
                 <Input
                   id="admin-issue-type-sla"
-                  type="number"
-                  min={1}
+                  inputMode="numeric"
                   value={editForm.slaHours}
-                  onChange={(event) => updateEdit("slaHours", event.target.value)}
+                  onChange={(event) => updateEdit("slaHours", event.target.value.replace(/\D/g, ""))}
                 />
               </div>
 

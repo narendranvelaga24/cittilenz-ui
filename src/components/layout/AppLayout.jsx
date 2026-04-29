@@ -192,9 +192,9 @@ export function AppLayout() {
     return () => window.clearTimeout(timer);
   }, [toastMessage]);
 
-  function handleLogout() {
-    logout();
-    navigate("/login", { replace: true });
+  async function handleLogout() {
+    await logout();
+    navigate("/", { replace: true });
   }
 
   const dockItems = getDockItems({
