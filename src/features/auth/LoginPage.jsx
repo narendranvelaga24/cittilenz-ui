@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { forgotPassword } from "../../api/auth.api";
 import { AnimatedCharactersPanel } from "../../components/auth/AnimatedCharactersPanel.jsx";
-import { Alert } from "../../components/ui/Alert.jsx";
 import { Button } from "../../components/ui/button.jsx";
 import {
   Dialog,
@@ -27,14 +26,11 @@ export function LoginPage() {
   const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ identifier: "", password: "" });
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
+  const [toast, setToast] = useState({ message: "", tone: "info" });
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotForm, setForgotForm] = useState({ identifier: "", newPassword: "", confirmPassword: "" });
-  const [forgotError, setForgotError] = useState("");
-  const [forgotSuccess, setForgotSuccess] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
 
   useEffect(() => {
@@ -43,28 +39,31 @@ export function LoginPage() {
 
   useEffect(() => {
     const queuedToast = popRouteToast();
-    if (queuedToast) setToastMessage(queuedToast);
+    if (queuedToast) setToast({ message: queuedToast, tone: "success" });
   }, []);
 
   useEffect(() => {
-    if (!toastMessage) return undefined;
-    const timer = window.setTimeout(() => setToastMessage(""), 2500);
+    if (!toast.message) return undefined;
+    const timer = window.setTimeout(() => setToast({ message: "", tone: "info" }), 2500);
     return () => window.clearTimeout(timer);
-  }, [toastMessage]);
+  }, [toast.message]);
+
+  function showToast(message, tone = "info") {
+    setToast({ message, tone });
+  }
 
   async function handleSubmit(event) {
     event.preventDefault();
-    setError("");
 
     // Validate identifier: not blank
     if (!form.identifier.trim()) {
-      setError("Please enter email or username.");
+      showToast("Please enter email or username.", "danger");
       return;
     }
 
     // Validate password: minimum 8 characters per contract
     if (form.password.length < 8) {
-      setError("Password must be at least 8 characters.");
+      showToast("Password must be at least 8 characters.", "danger");
       return;
     }
 
@@ -82,11 +81,11 @@ export function LoginPage() {
       const msg = errorMessage(err);
       // Distinguish error types per contract
       if (err.response?.status === 400) {
-        setError(msg || "Invalid credentials. Please check email, username, and password.");
+        showToast(msg || "Invalid credentials. Please check email, username, and password.", "danger");
       } else if (err.response?.status === 401) {
-        setError("Session expired. Please log in again.");
+        showToast("Session expired. Please log in again.", "danger");
       } else {
-        setError(msg || "Login failed. Please try again.");
+        showToast(msg || "Login failed. Please try again.", "danger");
       }
     } finally {
       setLoading(false);
@@ -101,42 +100,39 @@ export function LoginPage() {
     setForgotOpen(open);
     if (!open) {
       setForgotForm({ identifier: "", newPassword: "", confirmPassword: "" });
-      setForgotError("");
-      setForgotSuccess("");
       setForgotLoading(false);
     }
   }
 
   async function handleForgotSubmit(event) {
     event.preventDefault();
-    setForgotError("");
-    setForgotSuccess("");
 
     if (!forgotForm.identifier.trim()) {
-      setForgotError("Enter your username or email.");
+      showToast("Enter your username or email.", "danger");
       return;
     }
     if (forgotForm.newPassword.length < 8) {
-      setForgotError("New password must be at least 8 characters.");
+      showToast("New password must be at least 8 characters.", "danger");
       return;
     }
     if (forgotForm.newPassword !== forgotForm.confirmPassword) {
-      setForgotError("Passwords do not match.");
+      showToast("Passwords do not match.", "danger");
       return;
     }
 
     setForgotLoading(true);
     try {
+      const nextIdentifier = forgotForm.identifier.trim();
       await forgotPassword({
-        identifier: forgotForm.identifier.trim(),
+        identifier: nextIdentifier,
         newPassword: forgotForm.newPassword,
         confirmPassword: forgotForm.confirmPassword,
       });
-      setForgotSuccess("Password reset successful. You can log in with the new password now.");
-      setToastMessage("Password reset successful");
-      setForm((current) => ({ ...current, identifier: forgotForm.identifier.trim(), password: "" }));
+      setForm((current) => ({ ...current, identifier: nextIdentifier, password: "" }));
+      showToast("Password reset successful. You can log in with the new password now.", "success");
+      closeForgotDialog(false);
     } catch (err) {
-      setForgotError(errorMessage(err) || "Unable to reset password. Please try again.");
+      showToast(errorMessage(err) || "Unable to reset password. Please try again.", "danger");
     } finally {
       setForgotLoading(false);
     }
@@ -144,7 +140,7 @@ export function LoginPage() {
 
   return (
     <main className="auth-page">
-      <ToastNotification message={toastMessage} role="status" ariaLive="polite" />
+      <ToastNotification message={toast.message} tone={toast.tone} />
       <div className="auth-layout">
         <div className="auth-illustration">
           <div className="auth-illustration-header">
@@ -176,12 +172,6 @@ export function LoginPage() {
               <h1>Welcome back!</h1>
               <p>Please enter your details</p>
             </div>
-
-            {error && (
-              <div className="auth-error-block">
-                <Alert tone="danger">{error}</Alert>
-              </div>
-            )}
 
             <form onSubmit={handleSubmit} className="auth-form" noValidate>
               <div className="auth-field-group">
@@ -249,8 +239,6 @@ export function LoginPage() {
               Enter your username or email and set a new password.
             </DialogDescription>
           </DialogHeader>
-          {forgotError && <Alert tone="danger">{forgotError}</Alert>}
-          {forgotSuccess && <Alert tone="success">{forgotSuccess}</Alert>}
           <form className="form-grid" onSubmit={handleForgotSubmit} noValidate>
             <label>
               Username or email

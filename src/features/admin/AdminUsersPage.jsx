@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { createStaffUser, deleteStaffUser, getUsers, resetStaffPassword, updateStaffUser } from "../../api/admin.api";
 import { getDepartments } from "../../api/departments.api";
 import { getWards } from "../../api/wards.api";
-import { Alert } from "../../components/ui/Alert.jsx";
 import { Button } from "../../components/ui/button.jsx";
 import { DataTable } from "../../components/ui/DataTable.jsx";
 import {
@@ -36,13 +35,15 @@ export function AdminUsersPage() {
   const [deleteUserId, setDeleteUserId] = useState(null);
   const [resetPasswordForm, setResetPasswordForm] = useState({ password: "", confirmPassword: "" });
   const [editForm, setEditForm] = useState({ fullName: "", email: "", mobile: "", wardId: "", departmentId: "", isActive: "" });
-  const [toastMessage, setToastMessage] = useState("");
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [toast, setToast] = useState({ message: "", tone: "info" });
   const [page, setPage] = useState(0);
   const { data: users = [], isFetching: usersFetching } = useQuery({ queryKey: ["admin-users"], queryFn: getUsers });
   const { data: wards = [] } = useQuery({ queryKey: ["wards"], queryFn: getWards, staleTime: 30 * 60_000 });
   const { data: departments = [] } = useQuery({ queryKey: ["departments"], queryFn: getDepartments, staleTime: 30 * 60_000 });
+
+  function showToast(message, tone = "info") {
+    setToast({ message, tone });
+  }
 
   const mutation = useMutation({
     mutationFn: createStaffUser,
@@ -51,50 +52,43 @@ export function AdminUsersPage() {
         if (!createdUser?.id || current.some((user) => user.id === createdUser.id)) return current;
         return [createdUser, ...current];
       });
-      setMessage("Staff user created.");
-      setToastMessage("Staff user created");
-      setError("");
+      showToast("Staff user created.", "success");
       setForm({ username: "", fullName: "", email: "", mobile: "", password: "", role: "OFFICIAL", wardId: "", departmentId: "" });
       setIsCreateUserDialogOpen(false);
       setPage(0);
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     },
-    onError: (err) => setError(errorMessage(err)),
+    onError: (err) => showToast(errorMessage(err), "danger"),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, payload }) => updateStaffUser(id, payload),
-    onSuccess: () => {
-      setMessage("User updated.");
-      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
-    },
-    onError: (err) => setError(errorMessage(err)),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-users"] }),
+    onError: (err) => showToast(errorMessage(err), "danger"),
   });
 
   const resetPasswordMutation = useMutation({
     mutationFn: ({ id, password }) => resetStaffPassword(id, password),
     onSuccess: () => {
-      setMessage("Password reset successful.");
-      setToastMessage("Password reset successful");
+      showToast("Password reset successful.", "success");
     },
-    onError: (err) => setError(errorMessage(err)),
+    onError: (err) => showToast(errorMessage(err), "danger"),
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteStaffUser,
     onSuccess: () => {
-      setMessage("User deleted.");
-      setToastMessage("User deleted");
+      showToast("User deleted.", "success");
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
     },
-    onError: (err) => setError(errorMessage(err)),
+    onError: (err) => showToast(errorMessage(err), "danger"),
   });
 
   useEffect(() => {
-    if (!toastMessage) return undefined;
-    const timer = window.setTimeout(() => setToastMessage(""), 2500);
+    if (!toast.message) return undefined;
+    const timer = window.setTimeout(() => setToast({ message: "", tone: "info" }), 2500);
     return () => window.clearTimeout(timer);
-  }, [toastMessage]);
+  }, [toast.message]);
 
   function update(field, value) {
     setForm((current) => ({
@@ -112,63 +106,62 @@ export function AdminUsersPage() {
     const role = form.role;
 
     if (role !== "OFFICIAL" && role !== "WARD_SUPERIOR") {
-      setError("Role must be OFFICIAL or WARD_SUPERIOR.");
+      showToast("Role must be OFFICIAL or WARD_SUPERIOR.", "danger");
       return;
     }
     if (!normalizedUsername) {
-      setError("Username is required.");
+      showToast("Username is required.", "danger");
       return;
     }
     if (/\s/.test(normalizedUsername)) {
-      setError("Username must not contain spaces.");
+      showToast("Username must not contain spaces.", "danger");
       return;
     }
     if (!form.fullName.trim()) {
-      setError("Full name is required.");
+      showToast("Full name is required.", "danger");
       return;
     }
     if (!normalizedEmail) {
-      setError("Email is required.");
+      showToast("Email is required.", "danger");
       return;
     }
     if (!isValidEmail(normalizedEmail)) {
-      setError("Enter a valid email address.");
+      showToast("Enter a valid email address.", "danger");
       return;
     }
     if (!normalizedMobile) {
-      setError("Mobile is required.");
+      showToast("Mobile is required.", "danger");
       return;
     }
     if (!isValidIndianMobile(normalizedMobile)) {
-      setError("Enter a valid mobile number (10 digits starting with 6-9).");
+      showToast("Enter a valid mobile number (10 digits starting with 6-9).", "danger");
       return;
     }
     if (form.password.length < 8) {
-      setError("Password must be at least 8 characters.");
+      showToast("Password must be at least 8 characters.", "danger");
       return;
     }
     if (!form.wardId) {
-      setError("Ward is required.");
+      showToast("Ward is required.", "danger");
       return;
     }
     if (role === "OFFICIAL" && !form.departmentId) {
-      setError("Department is required for OFFICIAL role.");
+      showToast("Department is required for OFFICIAL role.", "danger");
       return;
     }
     if (users.some((user) => String(user.username || "").trim().toLowerCase() === normalizedUsername)) {
-      setError("Username already exists.");
+      showToast("Username already exists.", "danger");
       return;
     }
     if (users.some((user) => String(user.email || "").trim().toLowerCase() === normalizedEmail)) {
-      setError("Email already exists.");
+      showToast("Email already exists.", "danger");
       return;
     }
     if (users.some((user) => String(user.mobile || "").trim() === normalizedMobile)) {
-      setError("Mobile already exists.");
+      showToast("Mobile already exists.", "danger");
       return;
     }
 
-    setError("");
     const payload = {
       username: form.username.trim(),
       fullName: form.fullName.trim(),
@@ -188,8 +181,6 @@ export function AdminUsersPage() {
   }
 
   function startEdit(user) {
-    setError("");
-    setMessage("");
     setEditingUserId(user.id);
     setEditForm({
       fullName: user.fullName || "",
@@ -221,32 +212,32 @@ export function AdminUsersPage() {
     const normalizedMobile = editForm.mobile.trim();
 
     if (!normalizedFullName) {
-      setError("Full name is required.");
+      showToast("Full name is required.", "danger");
       return;
     }
     if (!normalizedEmail) {
-      setError("Email is required.");
+      showToast("Email is required.", "danger");
       return;
     }
     if (!isValidEmail(normalizedEmail)) {
-      setError("Enter a valid email address.");
+      showToast("Enter a valid email address.", "danger");
       return;
     }
     if (!normalizedMobile) {
-      setError("Mobile is required.");
+      showToast("Mobile is required.", "danger");
       return;
     }
     if (!isValidIndianMobile(normalizedMobile)) {
-      setError("Enter a valid mobile number (10 digits starting with 6-9).");
+      showToast("Enter a valid mobile number (10 digits starting with 6-9).", "danger");
       return;
     }
 
     if (users.some((user) => user.id !== row.id && String(user.email || "").trim().toLowerCase() === normalizedEmail)) {
-      setError("Email already exists.");
+      showToast("Email already exists.", "danger");
       return;
     }
     if (users.some((user) => user.id !== row.id && String(user.mobile || "").trim() === normalizedMobile)) {
-      setError("Mobile already exists.");
+      showToast("Mobile already exists.", "danger");
       return;
     }
 
@@ -261,19 +252,17 @@ export function AdminUsersPage() {
     }
 
     if (!Object.keys(payload).length) {
-      setMessage("No changes to update.");
+      showToast("No changes to update.");
       return;
     }
 
-    setError("");
     updateMutation.mutate(
       { id: row.id, payload },
       {
         onSuccess: () => {
           setEditingUserId(null);
           setEditForm({ fullName: "", email: "", mobile: "", wardId: "", departmentId: "", isActive: "" });
-          setMessage("User updated.");
-          setToastMessage("User saved successfully");
+          showToast("User updated.", "success");
         },
       },
     );
@@ -307,15 +296,14 @@ export function AdminUsersPage() {
     event.preventDefault();
     if (!resetPasswordUser) return;
     if (resetPasswordForm.password.length < 8) {
-      setError("Password must be at least 8 characters.");
+      showToast("Password must be at least 8 characters.", "danger");
       return;
     }
     if (resetPasswordForm.password !== resetPasswordForm.confirmPassword) {
-      setError("Passwords do not match.");
+      showToast("Passwords do not match.", "danger");
       return;
     }
 
-    setError("");
     resetPasswordMutation.mutate(
       { id: resetPasswordUser.id, password: resetPasswordForm.password },
       { onSuccess: closeResetPasswordDialog },
@@ -374,9 +362,7 @@ export function AdminUsersPage() {
           </button>
         )}
       />
-      <ToastNotification message={toastMessage} role="status" ariaLive="polite" />
-      {message && <Alert tone="success">{message}</Alert>}
-      {error && <Alert tone="danger">{error}</Alert>}
+      <ToastNotification message={toast.message} tone={toast.tone} />
       <DataTable
         caption="Admin users"
         columns={columns}

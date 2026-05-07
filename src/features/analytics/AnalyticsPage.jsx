@@ -4,10 +4,10 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 import { getFilteredSlaAnalytics, getLast30Analytics, getLast7Analytics, getSlaAnalytics } from "../../api/analytics.api";
 import { getDepartments } from "../../api/departments.api";
 import { getWards } from "../../api/wards.api";
-import { Alert } from "../../components/ui/Alert.jsx";
 import { AnalyticsChartSkeleton } from "../../components/ui/LoadingSkeletons.jsx";
 import { PageHeader } from "../../components/ui/PageHeader.jsx";
 import { StatCard } from "../../components/ui/StatCard.jsx";
+import { ToastNotification } from "../../components/ui/ToastNotification.jsx";
 import { errorMessage } from "../../lib/apiResponse";
 import { formatPercent } from "../../lib/format";
 import { useAuth } from "../auth/useAuth";
@@ -26,9 +26,6 @@ export function AnalyticsPage() {
   const analyticsQuery = useQuery({
     queryKey: ["sla-analytics", user.role, mode, filters],
     queryFn: async () => {
-      if (!dateRangeIsValid) {
-        throw new Error("From date must be earlier than or equal to To date.");
-      }
       if (mode === "last7") {
         return getLast7Analytics({
           wardId: canChooseWard && filters.wardId ? Number(filters.wardId) : undefined,
@@ -51,6 +48,7 @@ export function AnalyticsPage() {
       }
       return getSlaAnalytics();
     },
+    enabled: mode !== "filter" || dateRangeIsValid,
     staleTime: 0,
     refetchOnMount: "always",
     refetchOnWindowFocus: true,
@@ -69,9 +67,38 @@ export function AnalyticsPage() {
   ];
 
   const hasData = data && data.totalIssues > 0;
+  const supervisorInterventionCount = Number(data?.supervisorInterventionRequired || 0);
+  const toast = useMemo(() => {
+    if (mode === "filter" && !dateRangeIsValid) {
+      return {
+        message: "From date must be earlier than or equal to To date.",
+        tone: "danger",
+      };
+    }
+
+    if (error && (mode !== "filter" || dateRangeIsValid)) {
+      return {
+        message: errorMessage(error),
+        tone: "danger",
+      };
+    }
+
+    if (hasData && supervisorInterventionCount > 0) {
+      return {
+        message: `${supervisorInterventionCount} issues require supervisor intervention.`,
+        tone: "warning",
+      };
+    }
+
+    return {
+      message: "",
+      tone: "info",
+    };
+  }, [dateRangeIsValid, error, hasData, mode, supervisorInterventionCount]);
 
   return (
     <section className="page-stack analytics-shell">
+      <ToastNotification message={toast.message} tone={toast.tone} />
       <PageHeader eyebrow="SLA analytics" title="Service health overview" description="Compliance, escalation pressure, and resolution throughput in one compact view." />
       <div className="panel form-grid two">
         <label>
@@ -131,8 +158,6 @@ export function AnalyticsPage() {
           />
         </label>
       </div>
-      {!dateRangeIsValid && mode === "filter" && <Alert tone="danger">From date must be earlier than or equal to To date.</Alert>}
-      {error && <Alert tone="danger">{errorMessage(error)}</Alert>}
       <div className="stats-grid">
         <StatCard isLoading={isLoading} label="Total issues" value={data?.totalIssues || 0} />
         <StatCard isLoading={isLoading} label="SLA compliance" value={formatPercent(data?.slaCompliancePercentage)} tone="green" />
@@ -146,9 +171,6 @@ export function AnalyticsPage() {
           <StatCard isLoading={isLoading} label="Avg resolution" value={`${Number(data?.averageResolutionMinutes || 0).toFixed(1)}m`} />
           <StatCard isLoading={isLoading} label="Reassignments" value={formatPercent(data?.reassignmentRatePercentage)} />
         </div>
-      )}
-      {hasData && data?.supervisorInterventionRequired > 0 && (
-        <Alert tone="warning">⚠️ {data.supervisorInterventionRequired} issues require supervisor intervention.</Alert>
       )}
       <div className="panel chart-panel">
         {isLoading ? (

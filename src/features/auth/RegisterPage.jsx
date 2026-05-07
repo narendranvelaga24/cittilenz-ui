@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { registerCitizen } from "../../api/auth.api";
 import { AnimatedCharactersPanel } from "../../components/auth/AnimatedCharactersPanel.jsx";
-import { Alert } from "../../components/ui/Alert.jsx";
 import { ToastNotification } from "../../components/ui/ToastNotification.jsx";
 import { errorMessage } from "../../lib/apiResponse";
 import { pushRouteToast } from "../../lib/toast";
@@ -13,18 +12,16 @@ const LOGO_SRC = "/logo.png";
 export function RegisterPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ username: "", fullName: "", email: "", mobile: "", password: "", confirmPassword: "" });
-  const [error, setError] = useState("");
-  const [toast, setToast] = useState({ message: "", tone: "danger" });
+  const [toast, setToast] = useState({ message: "", tone: "info" });
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!toast.message) return undefined;
-    const timer = window.setTimeout(() => setToast({ message: "", tone: "danger" }), 3000);
+    const timer = window.setTimeout(() => setToast({ message: "", tone: "info" }), 3000);
     return () => window.clearTimeout(timer);
   }, [toast.message]);
 
   function showError(message) {
-    setError(message);
     setToast({ message, tone: "danger" });
   }
 
@@ -34,7 +31,6 @@ export function RegisterPage() {
 
   async function handleSubmit(event) {
     event.preventDefault();
-    setError("");
 
     // Validate all required fields
     if (!form.username.trim()) {
@@ -98,7 +94,7 @@ export function RegisterPage() {
 
   return (
     <main className="auth-page">
-      <ToastNotification message={toast.message} tone={toast.tone} role="alert" ariaLive="assertive" />
+      <ToastNotification message={toast.message} tone={toast.tone} />
       <div className="auth-layout">
         <div className="auth-illustration">
           <div className="auth-illustration-header">
@@ -130,12 +126,6 @@ export function RegisterPage() {
               <h1>Create your account</h1>
               <p>Please enter your details</p>
             </div>
-
-            {error && (
-              <div className="auth-error-block">
-                <Alert tone="danger">{error}</Alert>
-              </div>
-            )}
 
             <form onSubmit={handleSubmit} className="auth-form auth-form-grid" noValidate>
               <div className="auth-field-group">

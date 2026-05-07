@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { deactivateAccount, deleteAccount, getUserProfile, changePassword, updateProfile } from "../../api/users.api";
-import { Alert } from "../../components/ui/Alert.jsx";
 import { Button } from "../../components/ui/button.jsx";
 import {
   Dialog,
@@ -28,48 +27,44 @@ export function ProfilePage() {
   });
   const [form, setForm] = useState({ fullName: user.fullName || "", email: user.email || "", mobile: user.mobile || "" });
   const [passwordForm, setPasswordForm] = useState({ oldPassword: "", newPassword: "", confirmNewPassword: "" });
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
-  const [toastMessage, setToastMessage] = useState("");
+  const [toast, setToast] = useState({ message: "", tone: "info" });
   const [accountAction, setAccountAction] = useState("");
 
   useEffect(() => {
-    if (!toastMessage) return;
-    const timeout = setTimeout(() => setToastMessage(""), 4000);
+    if (!toast.message) return;
+    const timeout = setTimeout(() => setToast({ message: "", tone: "info" }), 4000);
     return () => clearTimeout(timeout);
-  }, [toastMessage]);
+  }, [toast.message]);
+
+  function showToast(message, tone = "info") {
+    setToast({ message, tone });
+  }
 
   const changePasswordMutation = useMutation({
     mutationFn: changePassword,
     onSuccess: async () => {
-      setMessage("Password changed successfully. Please sign in again.");
-      setToastMessage("Password changed successfully. Please sign in again.");
-      setError("");
+      showToast("Password changed successfully. Please sign in again.", "success");
       await logout();
     },
-    onError: (err) => setError(errorMessage(err)),
+    onError: (err) => showToast(errorMessage(err), "danger"),
   });
 
   const deactivateMutation = useMutation({
     mutationFn: deactivateAccount,
     onSuccess: async () => {
-      setMessage("Account deactivated.");
-      setToastMessage("Account deactivated.");
-      setError("");
+      showToast("Account deactivated.", "success");
       await logout();
     },
-    onError: (err) => setError(errorMessage(err)),
+    onError: (err) => showToast(errorMessage(err), "danger"),
   });
 
   const deleteMutation = useMutation({
     mutationFn: deleteAccount,
     onSuccess: async () => {
-      setMessage("Account deleted.");
-      setToastMessage("Account deleted.");
-      setError("");
+      showToast("Account deleted.", "success");
       await logout();
     },
-    onError: (err) => setError(errorMessage(err)),
+    onError: (err) => showToast(errorMessage(err), "danger"),
   });
 
   function update(field, value) {
@@ -79,17 +74,15 @@ export function ProfilePage() {
   async function submit(event) {
     event.preventDefault();
     if (!isCitizen) {
-      setError("Profile update is available only for citizen accounts in this backend.");
+      showToast("Profile update is available only for citizen accounts in this backend.", "danger");
       return;
     }
-    setError("");
-    setMessage("");
     if (form.email && !isValidEmail(form.email)) {
-      setError("Enter a valid email address.");
+      showToast("Enter a valid email address.", "danger");
       return;
     }
     if (form.mobile && !isValidIndianMobile(form.mobile)) {
-      setError("Enter a valid mobile number (10 digits starting with 6-9).");
+      showToast("Enter a valid mobile number (10 digits starting with 6-9).", "danger");
       return;
     }
     const changes = {};
@@ -97,40 +90,37 @@ export function ProfilePage() {
       if (form[field] !== (user[field] || "")) changes[field] = form[field];
     }
     if (!Object.keys(changes).length) {
-      setMessage("No profile changes to save.");
+      showToast("No profile changes to save.");
       return;
     }
     try {
       await updateProfile(changes);
       await refreshUser();
       queryClient.invalidateQueries({ queryKey: ["user-profile"] });
-      setMessage("Profile updated.");
-      setToastMessage("Profile updated.");
+      showToast("Profile updated.", "success");
     } catch (err) {
-      setError(errorMessage(err));
+      showToast(errorMessage(err), "danger");
     }
   }
 
   async function submitPassword(event) {
     event.preventDefault();
     if (!isCitizen) {
-      setError("Password change is available only for citizen accounts in this backend.");
+      showToast("Password change is available only for citizen accounts in this backend.", "danger");
       return;
     }
     if (!passwordForm.oldPassword) {
-      setError("Current password is required.");
+      showToast("Current password is required.", "danger");
       return;
     }
     if (!passwordForm.newPassword || passwordForm.newPassword.length < 8) {
-      setError("New password must be at least 8 characters.");
+      showToast("New password must be at least 8 characters.", "danger");
       return;
     }
     if (passwordForm.newPassword !== passwordForm.confirmNewPassword) {
-      setError("New passwords do not match.");
+      showToast("New passwords do not match.", "danger");
       return;
     }
-    setError("");
-    setMessage("");
     changePasswordMutation.mutate(passwordForm);
   }
 
@@ -150,10 +140,8 @@ export function ProfilePage() {
 
   return (
     <section className="page-stack profile-shell">
-      <ToastNotification message={toastMessage} role="status" ariaLive="polite" />
+      <ToastNotification message={toast.message} tone={toast.tone} />
       <PageHeader eyebrow="Account" title="Your profile" description="Keep contact details accurate for civic notifications." />
-      {message && <Alert tone="success">{message}</Alert>}
-      {error && <Alert tone="danger">{error}</Alert>}
       <div className="detail-grid">
         <form className="panel form-grid" onSubmit={submit} noValidate>
           <label>Full name<input value={form.fullName} onChange={(event) => update("fullName", event.target.value)} disabled={!isCitizen} /></label>

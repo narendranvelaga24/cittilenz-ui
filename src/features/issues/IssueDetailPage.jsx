@@ -5,7 +5,6 @@ import { getIssueById, linkDuplicate } from "../../api/issues.api";
 import { useAuth } from "../auth/useAuth";
 import { IssueStatusBadge } from "../../components/issues/IssueStatusBadge.jsx";
 import { IssueTimeline } from "../../components/issues/IssueTimeline.jsx";
-import { Alert } from "../../components/ui/Alert.jsx";
 import { OpenStreetMapAttribution } from "../../components/ui/OpenStreetMapAttribution.jsx";
 import { IssueDetailSkeleton } from "../../components/ui/LoadingSkeletons.jsx";
 import { PageHeader } from "../../components/ui/PageHeader.jsx";
@@ -33,15 +32,17 @@ export function IssueDetailPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { data: issue, isLoading } = useQuery({ queryKey: ["issue", id], queryFn: () => getIssueById(id) });
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
-  const [toastMessage, setToastMessage] = useState("");
+  const [toast, setToast] = useState({ message: "", tone: "info" });
 
   useEffect(() => {
-    if (!toastMessage) return;
-    const timeout = setTimeout(() => setToastMessage(""), 4000);
+    if (!toast.message) return;
+    const timeout = setTimeout(() => setToast({ message: "", tone: "info" }), 4000);
     return () => clearTimeout(timeout);
-  }, [toastMessage]);
+  }, [toast.message]);
+
+  function showToast(message, tone = "info") {
+    setToast({ message, tone });
+  }
 
   const linkDuplicateMutation = useMutation({
     mutationFn: () => linkDuplicate(id),
@@ -53,17 +54,12 @@ export function IssueDetailPage() {
         ? "You are already linked to this issue."
         : "You've been linked to this issue. Future updates will notify you.";
 
-      setMessage(nextMessage);
-      setToastMessage(nextMessage);
-      setError("");
+      showToast(nextMessage, alreadyLinked ? "info" : "success");
       queryClient.invalidateQueries({ queryKey: ["issue", id] });
       queryClient.invalidateQueries({ queryKey: ["my-issues"] });
       queryClient.invalidateQueries({ queryKey: ["citizen-dashboard"] });
     },
-    onError: (err) => {
-      setError(errorMessage(err));
-      setMessage("");
-    },
+    onError: (err) => showToast(errorMessage(err), "danger"),
   });
 
   if (isLoading) return <IssueDetailSkeleton />;
@@ -85,10 +81,8 @@ export function IssueDetailPage() {
 
   return (
     <section className="page-stack">
-      <ToastNotification message={toastMessage} role="status" ariaLive="polite" />
+      <ToastNotification message={toast.message} tone={toast.tone} />
       <PageHeader eyebrow={`Issue #${issue.id}`} title={issue.title} actions={<IssueStatusBadge status={issue.status} />} />
-      {message && <Alert tone="success">{message}</Alert>}
-      {error && <Alert tone="danger">{error}</Alert>}
       <div className="detail-grid">
         <div className="panel">
           <h2>Details</h2>
