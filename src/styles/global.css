@@ -13,6 +13,7 @@
 	--line-strong: color-mix(in srgb, var(--text) 24%, transparent);
 	--accent: #000000;
 	--accent-contrast: #f6f6f6;
+	--button-filled-text: #ffffff;
 	--success: color-mix(in srgb, var(--accent) 60%, var(--bg-soft));
 	--warn: color-mix(in srgb, var(--accent) 45%, var(--bg-soft));
 	--danger: color-mix(in srgb, var(--accent) 75%, var(--bg-soft));
@@ -48,6 +49,7 @@ html[data-theme="light"] {
 	--line-strong: color-mix(in srgb, var(--text) 24%, transparent);
 	--accent: #000000;
 	--accent-contrast: #f6f6f6;
+	--button-filled-text: #ffffff;
 	--nav-surface: color-mix(in srgb, var(--panel-solid) 22%, transparent);
 	--nav-surface-strong: color-mix(in srgb, var(--bg) 30%, transparent);
 	--nav-text: var(--text);
@@ -71,6 +73,7 @@ html[data-theme="dark"] {
 	--line-strong: color-mix(in srgb, #f4f4f4 36%, transparent);
 	--accent: #f4f4f4;
 	--accent-contrast: #020200;
+	--button-filled-text: #111111;
 	--shadow-soft: 0 20px 50px color-mix(in srgb, var(--accent-contrast) 45%, transparent);
 	--shadow-card: 0 12px 30px color-mix(in srgb, var(--accent-contrast) 40%, transparent);
 	--nav-surface: color-mix(in srgb, #0a0a0a 32%, transparent);
@@ -404,8 +407,7 @@ label {
 .dashboard-shell .hero-card,
 .dashboard-shell .stat-card,
 .dashboard-shell .dashboard-identity,
-.dashboard-shell .osm-attribution,
-.dashboard-shell .primary-button {
+.dashboard-shell .osm-attribution {
 	border: 1px solid color-mix(in srgb, var(--line) 82%, transparent);
 	background: color-mix(in srgb, var(--panel-solid) 20%, transparent);
 	backdrop-filter: blur(18px) saturate(130%);
@@ -434,13 +436,15 @@ label {
 	justify-self: start;
 	border-radius: 999px;
 	padding: 0.8rem 1.1rem;
-	background: color-mix(in srgb, var(--panel-solid) 24%, transparent);
-	color: var(--text);
+	background: var(--accent);
+	color: var(--button-filled-text);
+	border-color: transparent;
+	box-shadow: 0 10px 24px color-mix(in srgb, var(--accent) 22%, transparent);
 	text-decoration: none;
 }
 
 .dashboard-shell .primary-button:hover {
-	background: color-mix(in srgb, var(--panel-solid) 36%, transparent);
+	background: color-mix(in srgb, var(--accent) 90%, var(--bg));
 	transform: translateY(-1px);
 }
 
@@ -678,13 +682,25 @@ label {
 
 .profile-shell .action-cell .secondary-button,
 .profile-shell .action-cell .danger-button,
-.profile-shell .primary-button,
 .analytics-shell .primary-button {
 	border-radius: 999px;
 	border-color: color-mix(in srgb, var(--line-strong) 78%, transparent);
 	background: color-mix(in srgb, var(--panel-solid) 22%, transparent);
 	backdrop-filter: blur(12px) saturate(122%);
 	box-shadow: 0 12px 28px color-mix(in srgb, var(--text) 8%, transparent);
+}
+
+.profile-shell .primary-button,
+.analytics-shell .primary-button {
+	border-color: transparent;
+	background: var(--accent);
+	color: var(--button-filled-text);
+	box-shadow: 0 10px 24px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.profile-shell .primary-button:hover,
+.analytics-shell .primary-button:hover {
+	background: color-mix(in srgb, var(--accent) 90%, var(--bg));
 }
 
 .profile-shell .details-list {
@@ -786,8 +802,7 @@ label {
 	background: color-mix(in srgb, var(--panel-solid) 72%, transparent);
 }
 
-.report-shell .report-liquid-button,
-.report-shell .report-submit-button {
+.report-shell .report-liquid-button {
 	border-radius: 999px;
 	border: 1px solid color-mix(in srgb, var(--line) 76%, transparent);
 	background: color-mix(in srgb, var(--panel-solid) 22%, transparent);
@@ -796,8 +811,7 @@ label {
 	transition: transform 180ms ease, background-color 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
 }
 
-.report-shell .report-liquid-button:hover,
-.report-shell .report-submit-button:hover {
+.report-shell .report-liquid-button:hover {
 	background: color-mix(in srgb, var(--panel-solid) 34%, transparent);
 	transform: translateY(-1px);
 }
@@ -805,6 +819,18 @@ label {
 .report-shell .report-liquid-button:disabled,
 .report-shell .report-submit-button:disabled {
 	opacity: 0.72;
+}
+
+.report-shell .report-submit-button {
+	border-radius: 999px;
+	border: 1px solid transparent;
+	background: var(--accent);
+	color: var(--button-filled-text);
+	box-shadow: 0 10px 24px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.report-shell .report-submit-button:hover {
+	background: color-mix(in srgb, var(--accent) 90%, var(--bg));
 }
 
 .report-shell .report-status-card {
@@ -932,7 +958,7 @@ label {
 .primary-button,
 .lux-button {
 	background: var(--accent);
-	color: var(--accent-contrast);
+	color: var(--button-filled-text);
 	border-color: transparent;
 }
 
@@ -2339,7 +2365,7 @@ tbody tr:hover {
 
 .ui-button-default {
 	background: var(--accent);
-	color: var(--accent-contrast);
+	color: var(--button-filled-text);
 	box-shadow: var(--shadow-card);
 }
 
