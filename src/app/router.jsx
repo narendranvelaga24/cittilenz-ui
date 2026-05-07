@@ -12,6 +12,7 @@ const AdminIssuesPage = lazyNamed(() => import("../features/admin/AdminIssuesPag
 const AdminIssueTypesPage = lazyNamed(() => import("../features/admin/AdminIssueTypesPage.jsx"), "AdminIssueTypesPage");
 const AdminUsersPage = lazyNamed(() => import("../features/admin/AdminUsersPage.jsx"), "AdminUsersPage");
 const LoginPage = lazyNamed(() => import("../features/auth/LoginPage.jsx"), "LoginPage");
+const PostLoginWelcomePage = lazyNamed(() => import("../features/auth/PostLoginWelcomePage.jsx"), "PostLoginWelcomePage");
 const RegisterPage = lazyNamed(() => import("../features/auth/RegisterPage.jsx"), "RegisterPage");
 const AnalyticsPage = lazyNamed(() => import("../features/analytics/AnalyticsPage.jsx"), "AnalyticsPage");
 const CitizenDashboard = lazyNamed(() => import("../features/citizen/CitizenDashboard.jsx"), "CitizenDashboard");
@@ -38,6 +39,7 @@ export const router = createBrowserRouter([
   {
     element: <ProtectedRoute />,
     children: [
+      { path: "/welcome", element: withSuspense(<PageTransition><PostLoginWelcomePage /></PageTransition>) },
       {
         element: <AppLayout />,
         children: [

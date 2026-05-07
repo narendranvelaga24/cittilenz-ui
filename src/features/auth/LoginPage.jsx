@@ -72,7 +72,12 @@ export function LoginPage() {
     try {
       const user = await login(form);
       pushRouteToast("Login successful");
-      navigate(location.state?.from?.pathname || getHomeForRole(user.role), { replace: true });
+      navigate("/welcome", {
+        replace: true,
+        state: {
+          redirectTo: location.state?.from?.pathname || getHomeForRole(user.role),
+        },
+      });
     } catch (err) {
       const msg = errorMessage(err);
       // Distinguish error types per contract

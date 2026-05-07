@@ -994,6 +994,34 @@ label {
 		linear-gradient(160deg, var(--bg) 0%, var(--bg-soft) 100%);
 }
 
+.special-text-root {
+	display: inline-flex;
+	align-items: center;
+	min-height: 1.2em;
+	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+	font-weight: 600;
+	letter-spacing: 0.05em;
+}
+
+.post-login-welcome {
+	min-height: 100vh;
+	display: grid;
+	place-items: center;
+	padding: clamp(1.4rem, 3vw, 2.4rem);
+	background: var(--bg);
+}
+
+.post-login-welcome__text {
+	color: var(--text);
+	min-height: clamp(6rem, 18vw, 9.5rem);
+	font-size: clamp(2rem, 6vw, 5rem);
+	line-height: 1.02;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	justify-content: center;
+	text-align: center;
+}
+
 .auth-layout {
 	min-height: 100vh;
 	display: grid;
@@ -3071,6 +3099,10 @@ tbody tr:hover {
 		align-items: center;
 		justify-content: center;
 		width: 100%;
+	}
+
+	.post-login-welcome__text {
+		min-height: 5.4rem;
 	}
 }
 
