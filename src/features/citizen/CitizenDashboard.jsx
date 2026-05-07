@@ -78,10 +78,10 @@ export function CitizenDashboard() {
         action={<Link className="primary-button" to="/citizen/report-issue">Report an issue</Link>}
       />
       <div className="stats-grid">
-        <StatCard label="Total reported" value={isLoading ? "..." : data?.totalReported} />
-        <StatCard label="Resolved" value={isLoading ? "..." : data?.totalResolved} tone="green" />
-        <StatCard label="Active" value={isLoading ? "..." : data?.totalAssignedOrInProgress} tone="orange" />
-        <StatCard label="Escalated" value={isLoading ? "..." : data?.totalEscalated} tone="red" />
+        <StatCard isLoading={isLoading} label="Total reported" value={data?.totalReported} />
+        <StatCard isLoading={isLoading} label="Resolved" value={data?.totalResolved} tone="green" />
+        <StatCard isLoading={isLoading} label="Active" value={data?.totalAssignedOrInProgress} tone="orange" />
+        <StatCard isLoading={isLoading} label="Escalated" value={data?.totalEscalated} tone="red" />
       </div>
       <OpenStreetMapAttribution />
     </section>

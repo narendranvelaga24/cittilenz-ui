@@ -2,6 +2,7 @@ import { ArrowRight, Building2, Camera, MapPin, Menu, Sparkles, TimerReset, X } 
 import { useEffect, useRef, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { ThemeSwitch } from "../../components/ui/ThemeSwitch.jsx";
+import { LandingBootSkeleton } from "../../components/ui/LoadingSkeletons.jsx";
 import { useClickOutside } from "../../hooks/useClickOutside.js";
 import { getHomeForRole } from "../../lib/roles";
 import { useAuth } from "../auth/useAuth";
@@ -101,7 +102,7 @@ export function LandingPage() {
     window.history.pushState(null, "", href);
   }
 
-  if (booting) return <div className="screen-message">Opening Cittilenz...</div>;
+  if (booting) return <LandingBootSkeleton />;
   if (isAuthenticated) return <Navigate to={getHomeForRole(user.role)} replace />;
 
   return (

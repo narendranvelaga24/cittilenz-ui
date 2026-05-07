@@ -75,10 +75,10 @@ export function OfficialDashboard() {
         action={<Link className="primary-button" to="/official/issues">View assigned issues</Link>}
       />
       <div className="stats-grid">
-        <StatCard label="Assigned" value={isLoading ? "..." : data?.totalAssigned} />
-        <StatCard label="In progress" value={isLoading ? "..." : data?.totalInProgress} tone="orange" />
-        <StatCard label="Resolved" value={isLoading ? "..." : data?.totalResolved} tone="green" />
-        <StatCard label="Escalated" value={isLoading ? "..." : data?.totalEscalated} tone="red" />
+        <StatCard isLoading={isLoading} label="Assigned" value={data?.totalAssigned} />
+        <StatCard isLoading={isLoading} label="In progress" value={data?.totalInProgress} tone="orange" />
+        <StatCard isLoading={isLoading} label="Resolved" value={data?.totalResolved} tone="green" />
+        <StatCard isLoading={isLoading} label="Escalated" value={data?.totalEscalated} tone="red" />
       </div>
       <OpenStreetMapAttribution />
     </section>

@@ -3,6 +3,8 @@ import { Columns, Search } from "lucide-react";
 import { useMemo, useRef, useState } from "react";
 import { useClickOutside } from "../../hooks/useClickOutside.js";
 import { EmptyState } from "./EmptyState.jsx";
+import { Skeleton } from "./Skeleton.jsx";
+import { TableRowsSkeleton } from "./LoadingSkeletons.jsx";
 
 const MotionRow = motion.tr;
 
@@ -75,6 +77,8 @@ export function DataTable({
   const shownColumns = columns.filter((column) => currentVisibleColumns.has(column.key));
   const sortableColumns = columns.filter((column) => column.enableSort !== false && column.key !== "actions" && column.key !== "action");
   const activeSortColumn = columns.find((column) => column.key === currentSortState.key);
+  const loadingColumnCount = Math.max(1, shownColumns.length || columns.length || 1);
+  const loadingRowCount = Math.min(Math.max(rows.length || 6, 4), 8);
 
   const filteredRows = useMemo(() => {
     const query = currentSearchValue.trim().toLowerCase();
@@ -134,16 +138,26 @@ export function DataTable({
   }
 
   return (
-    <div className="table-card">
+    <div className="table-card" aria-busy={isLoading}>
       <div className="table-toolbar table-toolbar-rich">
         <div className="table-toolbar-summary">
-          {toolbar || <><strong>{caption || "Data"}</strong><span>{displayedRows.length} rows</span></>}
+          {toolbar || (
+            isLoading
+              ? (
+                <>
+                  <Skeleton className="skeleton-line skeleton-line-short skeleton-toolbar-title" />
+                  <Skeleton className="skeleton-kicker skeleton-toolbar-meta" />
+                </>
+              )
+              : <><strong>{caption || "Data"}</strong><span>{displayedRows.length} rows</span></>
+          )}
         </div>
         <div className="table-toolbar-controls">
           <label className="table-search">
             <Search size={15} />
             <input
               aria-label={searchPlaceholder}
+              disabled={isLoading}
               placeholder={searchPlaceholder}
               type="search"
               value={currentSearchValue}
@@ -155,6 +169,7 @@ export function DataTable({
             <button
               aria-expanded={isColumnMenuOpen}
               className="table-menu-trigger"
+              disabled={isLoading}
               onClick={() => setIsColumnMenuOpen((open) => !open)}
               type="button"
             >
@@ -174,7 +189,10 @@ export function DataTable({
         </div>
       </div>
       {isLoading ? (
-        <div className="table-loading">{loadingText}</div>
+        <>
+          <span className="sr-only" role="status" aria-live="polite">{loadingText}</span>
+          <TableRowsSkeleton columnCount={loadingColumnCount} rowCount={loadingRowCount} />
+        </>
       ) : (
         <div className="table-scroll-shell" style={{ "--table-min-width": tableMinWidth }}>
           <table aria-label={ariaLabel}>

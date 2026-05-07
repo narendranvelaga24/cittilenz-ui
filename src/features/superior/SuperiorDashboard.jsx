@@ -68,7 +68,7 @@ export function SuperiorDashboard() {
         action={<Link className="primary-button" to="/superior/issues">Review escalations</Link>}
       />
       <div className="stats-grid">
-        <StatCard label="Total escalated" value={isLoading ? "..." : data?.totalEscalated} tone="red" />
+        <StatCard isLoading={isLoading} label="Total escalated" value={data?.totalEscalated} tone="red" />
       </div>
       <OpenStreetMapAttribution />
     </section>

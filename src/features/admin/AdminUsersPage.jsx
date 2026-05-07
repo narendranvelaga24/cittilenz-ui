@@ -19,6 +19,7 @@ import { Input } from "../../components/ui/input.jsx";
 import { Label } from "../../components/ui/label.jsx";
 import { PageHeader } from "../../components/ui/PageHeader.jsx";
 import { Pagination } from "../../components/ui/Pagination.jsx";
+import { Skeleton } from "../../components/ui/Skeleton.jsx";
 import { ToastNotification } from "../../components/ui/ToastNotification.jsx";
 import { errorMessage } from "../../lib/apiResponse";
 import { isValidEmail, isValidIndianMobile } from "../../lib/validation";
@@ -291,6 +292,7 @@ export function AdminUsersPage() {
   const visibleUsers = sortedUsers.slice(start, start + PAGE_SIZE);
   const rangeStart = sortedUsers.length ? start + 1 : 0;
   const rangeEnd = Math.min(start + PAGE_SIZE, sortedUsers.length);
+  const isInitialLoading = usersFetching && users.length === 0;
   const editingUser = users.find((user) => user.id === editingUserId) || null;
   const viewingUser = users.find((user) => user.id === viewingUserId) || null;
   const resetPasswordUser = users.find((user) => user.id === resetPasswordUserId) || null;
@@ -381,8 +383,14 @@ export function AdminUsersPage() {
         rows={visibleUsers}
         getRowKey={(user) => user.id}
         emptyTitle="No users found"
+        isLoading={isInitialLoading}
         searchPlaceholder="Search users, email, mobile, role..."
-        toolbar={<><strong>Latest users</strong><span>{usersFetching ? "Refreshing..." : `Showing ${rangeStart}-${rangeEnd} of ${users.length}`}</span></>}
+        toolbar={
+          <>
+            <strong>Latest users</strong>
+            {usersFetching ? <Skeleton className="skeleton-kicker skeleton-toolbar-meta" /> : <span>{`Showing ${rangeStart}-${rangeEnd} of ${users.length}`}</span>}
+          </>
+        }
       />
 
       <Dialog

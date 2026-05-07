@@ -62,10 +62,10 @@ export function AdminDashboard() {
         description="Create staff accounts, manage issue types, and monitor operational health across wards."
       />
       <div className="stats-grid">
-        <StatCard label="Citizens" value={isLoading ? "..." : data?.totalCitizens} />
-        <StatCard label="Officials" value={isLoading ? "..." : data?.totalOfficials} tone="green" />
-        <StatCard label="Ward superiors" value={isLoading ? "..." : data?.totalWardSuperiors} tone="orange" />
-        <StatCard label="Issues" value={isLoading ? "..." : data?.totalIssues} tone="red" />
+        <StatCard isLoading={isLoading} label="Citizens" value={data?.totalCitizens} />
+        <StatCard isLoading={isLoading} label="Officials" value={data?.totalOfficials} tone="green" />
+        <StatCard isLoading={isLoading} label="Ward superiors" value={data?.totalWardSuperiors} tone="orange" />
+        <StatCard isLoading={isLoading} label="Issues" value={data?.totalIssues} tone="red" />
       </div>
       <OpenStreetMapAttribution />
     </section>

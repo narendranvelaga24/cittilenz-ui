@@ -5,6 +5,7 @@ import { getFilteredSlaAnalytics, getLast30Analytics, getLast7Analytics, getSlaA
 import { getDepartments } from "../../api/departments.api";
 import { getWards } from "../../api/wards.api";
 import { Alert } from "../../components/ui/Alert.jsx";
+import { AnalyticsChartSkeleton } from "../../components/ui/LoadingSkeletons.jsx";
 import { PageHeader } from "../../components/ui/PageHeader.jsx";
 import { StatCard } from "../../components/ui/StatCard.jsx";
 import { errorMessage } from "../../lib/apiResponse";
@@ -133,32 +134,36 @@ export function AnalyticsPage() {
       {!dateRangeIsValid && mode === "filter" && <Alert tone="danger">From date must be earlier than or equal to To date.</Alert>}
       {error && <Alert tone="danger">{errorMessage(error)}</Alert>}
       <div className="stats-grid">
-        <StatCard label="Total issues" value={isLoading ? "..." : data?.totalIssues || 0} />
-        <StatCard label="SLA compliance" value={isLoading ? "..." : formatPercent(data?.slaCompliancePercentage)} tone="green" />
-        <StatCard label="Escalation rate" value={isLoading ? "..." : formatPercent(data?.escalationRatePercentage)} tone="orange" />
-        <StatCard label="Hard breaches" value={isLoading ? "..." : data?.hardSlaBreaches || 0} tone="red" />
+        <StatCard isLoading={isLoading} label="Total issues" value={data?.totalIssues || 0} />
+        <StatCard isLoading={isLoading} label="SLA compliance" value={formatPercent(data?.slaCompliancePercentage)} tone="green" />
+        <StatCard isLoading={isLoading} label="Escalation rate" value={formatPercent(data?.escalationRatePercentage)} tone="orange" />
+        <StatCard isLoading={isLoading} label="Hard breaches" value={data?.hardSlaBreaches || 0} tone="red" />
       </div>
-      {hasData && (
+      {(hasData || isLoading) && (
         <div className="stats-grid">
-          <StatCard label="Soft breaches" value={isLoading ? "..." : data?.softSlaBreaches || 0} tone="yellow" />
-          <StatCard label="Avg acknowledgement" value={isLoading ? "..." : `${Number(data?.averageAcknowledgementMinutes || 0).toFixed(1)}m`} />
-          <StatCard label="Avg resolution" value={isLoading ? "..." : `${Number(data?.averageResolutionMinutes || 0).toFixed(1)}m`} />
-          <StatCard label="Reassignments" value={isLoading ? "..." : formatPercent(data?.reassignmentRatePercentage)} />
+          <StatCard isLoading={isLoading} label="Soft breaches" value={data?.softSlaBreaches || 0} tone="yellow" />
+          <StatCard isLoading={isLoading} label="Avg acknowledgement" value={`${Number(data?.averageAcknowledgementMinutes || 0).toFixed(1)}m`} />
+          <StatCard isLoading={isLoading} label="Avg resolution" value={`${Number(data?.averageResolutionMinutes || 0).toFixed(1)}m`} />
+          <StatCard isLoading={isLoading} label="Reassignments" value={formatPercent(data?.reassignmentRatePercentage)} />
         </div>
       )}
       {hasData && data?.supervisorInterventionRequired > 0 && (
         <Alert tone="warning">⚠️ {data.supervisorInterventionRequired} issues require supervisor intervention.</Alert>
       )}
       <div className="panel chart-panel">
-        <ResponsiveContainer width="100%" height={320}>
-          <BarChart data={chartData}>
-            <CartesianGrid stroke="var(--lux-line)" strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis allowDecimals={false} />
-            <Tooltip />
-            <Bar dataKey="value" fill="var(--lux-ink)" radius={[8, 8, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+        {isLoading ? (
+          <AnalyticsChartSkeleton />
+        ) : (
+          <ResponsiveContainer width="100%" height={320}>
+            <BarChart data={chartData}>
+              <CartesianGrid stroke="var(--lux-line)" strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis allowDecimals={false} />
+              <Tooltip />
+              <Bar dataKey="value" fill="var(--lux-ink)" radius={[8, 8, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </section>
   );

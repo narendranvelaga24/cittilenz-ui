@@ -1,6 +1,17 @@
 import { lazy, Suspense } from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { AppLayout } from "../components/layout/AppLayout.jsx";
+import {
+  AnalyticsPageSkeleton,
+  AuthPageSkeleton,
+  CenteredSplashSkeleton,
+  ContentPageSkeleton,
+  DashboardPageSkeleton,
+  IssueDetailSkeleton,
+  LandingBootSkeleton,
+  ReportPageSkeleton,
+  TablePageSkeleton,
+} from "../components/ui/LoadingSkeletons.jsx";
 import { PageTransition } from "../components/routing/PageTransition.jsx";
 import { ProtectedRoute } from "../components/routing/ProtectedRoute.jsx";
 
@@ -26,58 +37,58 @@ const ReportIssuePage = lazyNamed(() => import("../features/report/ReportIssuePa
 const SuperiorDashboard = lazyNamed(() => import("../features/superior/SuperiorDashboard.jsx"), "SuperiorDashboard");
 const SuperiorIssuesPage = lazyNamed(() => import("../features/superior/SuperiorIssuesPage.jsx"), "SuperiorIssuesPage");
 
-const withSuspense = (element) => (
-  <Suspense fallback={<div className="screen-message">Loading page...</div>}>
+const withSuspense = (element, fallback = <ContentPageSkeleton />) => (
+  <Suspense fallback={fallback}>
     {element}
   </Suspense>
 );
 
 export const router = createBrowserRouter([
-  { path: "/", element: withSuspense(<PageTransition><LandingPage /></PageTransition>) },
-  { path: "/login", element: withSuspense(<PageTransition><LoginPage /></PageTransition>) },
-  { path: "/register", element: withSuspense(<PageTransition><RegisterPage /></PageTransition>) },
+  { path: "/", element: withSuspense(<PageTransition><LandingPage /></PageTransition>, <LandingBootSkeleton />) },
+  { path: "/login", element: withSuspense(<PageTransition><LoginPage /></PageTransition>, <AuthPageSkeleton fieldCount={2} />) },
+  { path: "/register", element: withSuspense(<PageTransition><RegisterPage /></PageTransition>, <AuthPageSkeleton fieldCount={6} grid wide />) },
   {
     element: <ProtectedRoute />,
     children: [
-      { path: "/welcome", element: withSuspense(<PageTransition><PostLoginWelcomePage /></PageTransition>) },
+      { path: "/welcome", element: withSuspense(<PageTransition><PostLoginWelcomePage /></PageTransition>, <CenteredSplashSkeleton />) },
       {
         element: <AppLayout />,
         children: [
-          { path: "/profile", element: withSuspense(<ProfilePage />) },
+          { path: "/profile", element: withSuspense(<ProfilePage />, <ContentPageSkeleton panelCount={3} shellClassName="profile-shell" showAction={false} />) },
           {
             element: <ProtectedRoute roles={["CITIZEN"]} />,
             children: [
-              { path: "/citizen/dashboard", element: withSuspense(<CitizenDashboard />) },
-              { path: "/citizen/report-issue", element: withSuspense(<ReportIssuePage />) },
-              { path: "/citizen/issues", element: withSuspense(<MyIssuesPage />) },
-              { path: "/citizen/issues/:id", element: withSuspense(<IssueDetailPage />) },
+              { path: "/citizen/dashboard", element: withSuspense(<CitizenDashboard />, <DashboardPageSkeleton />) },
+              { path: "/citizen/report-issue", element: withSuspense(<ReportIssuePage />, <ReportPageSkeleton />) },
+              { path: "/citizen/issues", element: withSuspense(<MyIssuesPage />, <TablePageSkeleton columnCount={5} />) },
+              { path: "/citizen/issues/:id", element: withSuspense(<IssueDetailPage />, <IssueDetailSkeleton />) },
             ],
           },
           {
             element: <ProtectedRoute roles={["OFFICIAL"]} />,
             children: [
-              { path: "/official/dashboard", element: withSuspense(<OfficialDashboard />) },
-              { path: "/official/issues", element: withSuspense(<OfficialIssuesPage />) },
-              { path: "/official/issues/:id", element: withSuspense(<IssueDetailPage />) },
+              { path: "/official/dashboard", element: withSuspense(<OfficialDashboard />, <DashboardPageSkeleton />) },
+              { path: "/official/issues", element: withSuspense(<OfficialIssuesPage />, <TablePageSkeleton columnCount={6} />) },
+              { path: "/official/issues/:id", element: withSuspense(<IssueDetailPage />, <IssueDetailSkeleton />) },
             ],
           },
           {
             element: <ProtectedRoute roles={["WARD_SUPERIOR"]} />,
             children: [
-              { path: "/superior/dashboard", element: withSuspense(<SuperiorDashboard />) },
-              { path: "/superior/issues", element: withSuspense(<SuperiorIssuesPage />) },
-              { path: "/superior/issues/:id", element: withSuspense(<IssueDetailPage />) },
-              { path: "/analytics", element: withSuspense(<AnalyticsPage />) },
+              { path: "/superior/dashboard", element: withSuspense(<SuperiorDashboard />, <DashboardPageSkeleton statCount={1} />) },
+              { path: "/superior/issues", element: withSuspense(<SuperiorIssuesPage />, <TablePageSkeleton columnCount={6} />) },
+              { path: "/superior/issues/:id", element: withSuspense(<IssueDetailPage />, <IssueDetailSkeleton />) },
+              { path: "/analytics", element: withSuspense(<AnalyticsPage />, <AnalyticsPageSkeleton />) },
             ],
           },
           {
             element: <ProtectedRoute roles={["ADMIN"]} />,
             children: [
-              { path: "/admin/dashboard", element: withSuspense(<AdminDashboard />) },
-              { path: "/admin/users", element: withSuspense(<AdminUsersPage />) },
-              { path: "/admin/issue-types", element: withSuspense(<AdminIssueTypesPage />) },
-              { path: "/admin/issues", element: withSuspense(<AdminIssuesPage />) },
-              { path: "/admin/analytics", element: withSuspense(<AnalyticsPage />) },
+              { path: "/admin/dashboard", element: withSuspense(<AdminDashboard />, <DashboardPageSkeleton />) },
+              { path: "/admin/users", element: withSuspense(<AdminUsersPage />, <TablePageSkeleton columnCount={7} />) },
+              { path: "/admin/issue-types", element: withSuspense(<AdminIssueTypesPage />, <TablePageSkeleton columnCount={6} />) },
+              { path: "/admin/issues", element: withSuspense(<AdminIssuesPage />, <TablePageSkeleton columnCount={6} />) },
+              { path: "/admin/analytics", element: withSuspense(<AnalyticsPage />, <AnalyticsPageSkeleton />) },
             ],
           },
         ],

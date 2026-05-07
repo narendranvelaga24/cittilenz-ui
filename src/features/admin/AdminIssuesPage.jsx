@@ -7,6 +7,7 @@ import { DataTable } from "../../components/ui/DataTable.jsx";
 import { OpenStreetMapAttribution } from "../../components/ui/OpenStreetMapAttribution.jsx";
 import { PageHeader } from "../../components/ui/PageHeader.jsx";
 import { Pagination } from "../../components/ui/Pagination.jsx";
+import { Skeleton } from "../../components/ui/Skeleton.jsx";
 
 function pickFirst(...values) {
   for (const value of values) {
@@ -77,6 +78,7 @@ export function AdminIssuesPage() {
 
   const rows = data?.content || [];
   const totalPages = Math.max(1, Number(data?.totalPages || 1));
+  const isInitialLoading = isFetching && rows.length === 0;
 
   const columns = [
     { key: "title", header: "Issue" },
@@ -160,9 +162,9 @@ export function AdminIssuesPage() {
         rows={rows}
         getRowKey={(issue) => issue.id}
         emptyTitle="No issues found"
-        isLoading={isFetching}
+        isLoading={isInitialLoading}
         searchPlaceholder="Search issues, status, type, reporter, official..."
-        toolbar={<span>{isFetching ? "Refreshing..." : `Showing ${rows.length} of ${data?.totalElements ?? 0}`}</span>}
+        toolbar={isFetching ? <Skeleton className="skeleton-kicker skeleton-toolbar-meta" /> : <span>{`Showing ${rows.length} of ${data?.totalElements ?? 0}`}</span>}
         filters={
           <div className="page-actions admin-issues-controls" aria-label="Admin issue filters">
             <select value={status} onChange={(event) => { setStatus(event.target.value); setPage(0); }}>

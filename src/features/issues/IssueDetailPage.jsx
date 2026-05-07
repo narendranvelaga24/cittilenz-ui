@@ -7,6 +7,7 @@ import { IssueStatusBadge } from "../../components/issues/IssueStatusBadge.jsx";
 import { IssueTimeline } from "../../components/issues/IssueTimeline.jsx";
 import { Alert } from "../../components/ui/Alert.jsx";
 import { OpenStreetMapAttribution } from "../../components/ui/OpenStreetMapAttribution.jsx";
+import { IssueDetailSkeleton } from "../../components/ui/LoadingSkeletons.jsx";
 import { PageHeader } from "../../components/ui/PageHeader.jsx";
 import { ToastNotification } from "../../components/ui/ToastNotification.jsx";
 import { errorMessage } from "../../lib/apiResponse";
@@ -65,7 +66,7 @@ export function IssueDetailPage() {
     },
   });
 
-  if (isLoading) return <div className="screen-message">Loading issue...</div>;
+  if (isLoading) return <IssueDetailSkeleton />;
 
   // Check if current user is citizen and has already reported this issue
   const isCitizen = user?.role === "CITIZEN";

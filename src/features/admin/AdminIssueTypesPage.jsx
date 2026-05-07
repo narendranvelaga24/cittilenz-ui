@@ -17,6 +17,7 @@ import { Input } from "../../components/ui/input.jsx";
 import { Label } from "../../components/ui/label.jsx";
 import { PageHeader } from "../../components/ui/PageHeader.jsx";
 import { Pagination } from "../../components/ui/Pagination.jsx";
+import { Skeleton } from "../../components/ui/Skeleton.jsx";
 import { ToastNotification } from "../../components/ui/ToastNotification.jsx";
 import { errorMessage } from "../../lib/apiResponse";
 
@@ -201,6 +202,7 @@ export function AdminIssueTypesPage() {
   const rangeStart = sortedTypes.length ? start + 1 : 0;
   const rangeEnd = Math.min(start + PAGE_SIZE, sortedTypes.length);
   const editingIssueType = issueTypes.find((issueType) => issueType.id === editingIssueTypeId) || null;
+  const isInitialLoading = issueTypesFetching && issueTypes.length === 0;
 
   const columns = [
     { key: "name", header: "Type", accessor: (type) => type.displayName || type.name, render: (type) => type.displayName },
@@ -247,8 +249,14 @@ export function AdminIssueTypesPage() {
         rows={visibleTypes}
         getRowKey={(type) => type.id}
         emptyTitle="No issue types found"
+        isLoading={isInitialLoading}
         searchPlaceholder="Search issue types, department, priority..."
-        toolbar={<><strong>Latest issue types</strong><span>{issueTypesFetching ? "Refreshing..." : `Showing ${rangeStart}-${rangeEnd} of ${issueTypes.length}`}</span></>}
+        toolbar={
+          <>
+            <strong>Latest issue types</strong>
+            {issueTypesFetching ? <Skeleton className="skeleton-kicker skeleton-toolbar-meta" /> : <span>{`Showing ${rangeStart}-${rangeEnd} of ${issueTypes.length}`}</span>}
+          </>
+        }
       />
 
       <Dialog
