@@ -18,6 +18,15 @@ function getColumnValue(column, row) {
   return row[column.key];
 }
 
+function isSortableColumn(column) {
+  return column.enableSort !== false && column.key !== "actions" && column.key !== "action";
+}
+
+function getColumnLabel(column) {
+  if (typeof column.header === "string") return column.header;
+  return column.label || column.key;
+}
+
 function sortRows(rows, column, direction) {
   if (!column) return rows;
   const multiplier = direction === "desc" ? -1 : 1;
@@ -75,7 +84,7 @@ export function DataTable({
   };
 
   const shownColumns = columns.filter((column) => currentVisibleColumns.has(column.key));
-  const sortableColumns = columns.filter((column) => column.enableSort !== false && column.key !== "actions" && column.key !== "action");
+  const sortableColumns = columns.filter(isSortableColumn);
   const activeSortColumn = columns.find((column) => column.key === currentSortState.key);
   const loadingColumnCount = Math.max(1, shownColumns.length || columns.length || 1);
   const loadingRowCount = Math.min(Math.max(rows.length || 6, 4), 8);
@@ -137,6 +146,18 @@ export function DataTable({
     updateSort({ key: columnKey, direction: currentSortState.direction === "asc" ? "desc" : "asc" });
   }
 
+  function changeSort(columnKey) {
+    if (!columnKey) {
+      updateSort({ key: "", direction: "asc" });
+      return;
+    }
+
+    updateSort({
+      key: columnKey,
+      direction: currentSortState.key === columnKey ? currentSortState.direction : "asc",
+    });
+  }
+
   return (
     <div className="table-card" aria-busy={isLoading}>
       <div className="table-toolbar table-toolbar-rich">
@@ -165,26 +186,55 @@ export function DataTable({
             />
           </label>
           {filters}
-          <div className="table-menu" ref={columnMenuRef}>
-            <button
-              aria-expanded={isColumnMenuOpen}
-              className="table-menu-trigger"
-              disabled={isLoading}
-              onClick={() => setIsColumnMenuOpen((open) => !open)}
-              type="button"
-            >
-              <Columns size={15} /> Columns
-            </button>
-            {isColumnMenuOpen && (
-            <div className="table-menu-content" role="menu">
-              {columns.map((column) => (
-                <label key={column.key} role="menuitem">
-                  <input checked={currentVisibleColumns.has(column.key)} onChange={() => toggleColumn(column.key)} type="checkbox" />
-                  {column.header || column.key}
+          <div className="table-toolbar-utility-controls">
+            {sortableColumns.length > 0 ? (
+              <div className="table-toolbar-sort-group" role="group" aria-label={`${ariaLabel || caption || "Table"} sorting`}>
+                <label className="table-sort-field">
+                  <span>Sort</span>
+                  <select
+                    aria-label={`Sort ${ariaLabel || caption || "table"} by`}
+                    disabled={isLoading}
+                    value={currentSortState.key}
+                    onChange={(event) => changeSort(event.target.value)}
+                  >
+                    <option value="">Default order</option>
+                    {sortableColumns.map((column) => (
+                      <option key={column.key} value={column.key}>{getColumnLabel(column)}</option>
+                    ))}
+                  </select>
                 </label>
-              ))}
+                <button
+                  aria-label={currentSortState.direction === "asc" ? "Switch to descending order" : "Switch to ascending order"}
+                  className="table-sort-order-button"
+                  disabled={isLoading || !currentSortState.key}
+                  onClick={() => toggleSort(currentSortState.key)}
+                  type="button"
+                >
+                  {currentSortState.direction === "asc" ? "Asc" : "Desc"}
+                </button>
+              </div>
+            ) : null}
+            <div className="table-menu" ref={columnMenuRef}>
+              <button
+                aria-expanded={isColumnMenuOpen}
+                className="table-menu-trigger"
+                disabled={isLoading}
+                onClick={() => setIsColumnMenuOpen((open) => !open)}
+                type="button"
+              >
+                <Columns size={15} /> Columns
+              </button>
+              {isColumnMenuOpen && (
+              <div className="table-menu-content" role="menu">
+                {columns.map((column) => (
+                  <label key={column.key} role="menuitem">
+                    <input checked={currentVisibleColumns.has(column.key)} onChange={() => toggleColumn(column.key)} type="checkbox" />
+                    <span className="table-menu-label">{getColumnLabel(column)}</span>
+                  </label>
+                ))}
+              </div>
+              )}
             </div>
-            )}
           </div>
         </div>
       </div>
@@ -200,11 +250,18 @@ export function DataTable({
             <thead>
               <tr>
                 {shownColumns.map((column) => (
-                  <th key={column.key}>
-                    {sortableColumns.some((sortableColumn) => sortableColumn.key === column.key) ? (
-                      <button className="table-sort-button" onClick={() => toggleSort(column.key)} type="button">
-                        {column.header}
-                        <span>{currentSortState.key === column.key ? (currentSortState.direction === "asc" ? "↑" : "↓") : "↕"}</span>
+                  <th
+                    aria-sort={isSortableColumn(column) ? (currentSortState.key === column.key ? (currentSortState.direction === "asc" ? "ascending" : "descending") : "none") : undefined}
+                    key={column.key}
+                  >
+                    {isSortableColumn(column) ? (
+                      <button
+                        className={`table-sort-button${currentSortState.key === column.key ? " is-active" : ""}`}
+                        onClick={() => toggleSort(column.key)}
+                        type="button"
+                      >
+                        <span className="table-sort-label">{getColumnLabel(column)}</span>
+                        <span className="table-sort-indicator" aria-hidden="true">{currentSortState.key === column.key ? (currentSortState.direction === "asc" ? "↑" : "↓") : "↕"}</span>
                       </button>
                     ) : column.header}
                   </th>
@@ -220,7 +277,7 @@ export function DataTable({
                   transition={{ delay: Math.min(index * 0.035, 0.28), duration: 0.25, ease: "easeOut" }}
                 >
                   {shownColumns.map((column) => (
-                    <td data-label={column.header} key={column.key}>{column.render ? column.render(row) : getColumnValue(column, row)}</td>
+                    <td data-label={getColumnLabel(column)} key={column.key}>{column.render ? column.render(row) : getColumnValue(column, row)}</td>
                   ))}
                 </MotionRow>
               ))}

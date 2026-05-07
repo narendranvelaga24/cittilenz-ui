@@ -401,16 +401,6 @@ export function SuperiorIssuesPage() {
     },
   ];
 
-  const sortOptions = [
-    { value: "hardSlaDeadline", label: "SLA status" },
-    { value: "status", label: "Status" },
-    { value: "title", label: "Issue title" },
-    { value: "reporterDetails", label: "Reported by" },
-    { value: "officialDetails", label: "Working official" },
-    { value: "departmentName", label: "Department" },
-    { value: "requiresSupervisorIntervention", label: "Intervention" },
-  ];
-
   return (
     <section className="page-stack">
       <ToastNotification
@@ -446,29 +436,6 @@ export function SuperiorIssuesPage() {
             <option value="IN_PROGRESS">In progress</option>
             <option value="RESOLVED">Resolved</option>
             <option value="">All</option>
-          </select>
-          <select
-            aria-label="Sort superior issues by"
-            value={sortKey}
-            onChange={(event) => {
-              setSortKey(event.target.value);
-              setPage(0);
-            }}
-          >
-            {sortOptions.map((option) => (
-              <option key={option.value} value={option.value}>{option.label}</option>
-            ))}
-          </select>
-          <select
-            aria-label="Sort order"
-            value={sortDirection}
-            onChange={(event) => {
-              setSortDirection(event.target.value);
-              setPage(0);
-            }}
-          >
-            <option value="desc">Newest first</option>
-            <option value="asc">Oldest first</option>
           </select>
           <select value={departmentId} onChange={(event) => {
             setDepartmentId(event.target.value);

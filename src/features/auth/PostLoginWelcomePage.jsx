@@ -4,8 +4,8 @@ import { SpecialText } from "@/components/ui/special-text";
 import { getHomeForRole } from "../../lib/roles";
 import { useAuth } from "./useAuth";
 
-const GREETING_DURATION_MS = 1800;
-const REDIRECT_DURATION_MS = 4200;
+const GREETING_DURATION_MS = 2600;
+const REDIRECT_DURATION_MS = GREETING_DURATION_MS * 2;
 
 function getDisplayName(user) {
   const fullName = String(user?.fullName || "").trim();

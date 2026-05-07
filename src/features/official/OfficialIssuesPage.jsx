@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getIssueById, getRoleIssues, resolveIssue, startIssue } from "../../api/issues.api";
 import { IssueDetailsDialog } from "../../components/issues/IssueDetailsDialog.jsx";
 import { IssueStatusBadge } from "../../components/issues/IssueStatusBadge.jsx";
@@ -675,21 +675,6 @@ export function OfficialIssuesPage({ mode }) {
     });
   }
 
-  const sortOptions = useMemo(() => ([
-    { value: "hardSlaDeadline", label: "SLA deadline" },
-    { value: "status", label: "Status" },
-    { value: "title", label: "Issue title" },
-    { value: "issueType", label: "Issue type" },
-    { value: "reporterDetails", label: "Reported by" },
-    ...(role === "ADMIN" ? [{ value: "officialDetails", label: "Official" }, { value: "wardName", label: "Ward" }] : []),
-  ]), [role]);
-
-  useEffect(() => {
-    if (!sortOptions.some((option) => option.value === sortKey)) {
-      setSortKey("hardSlaDeadline");
-    }
-  }, [sortKey, sortOptions]);
-
   return (
     <section className="page-stack">
       <ToastNotification
@@ -725,29 +710,6 @@ export function OfficialIssuesPage({ mode }) {
             <option value="IN_PROGRESS">In progress</option>
             <option value="RESOLVED">Resolved</option>
             <option value="ESCALATED">Escalated</option>
-          </select>
-          <select
-            aria-label="Sort issues by"
-            value={sortKey}
-            onChange={(event) => {
-              setSortKey(event.target.value);
-              setPage(0);
-            }}
-          >
-            {sortOptions.map((option) => (
-              <option key={option.value} value={option.value}>{option.label}</option>
-            ))}
-          </select>
-          <select
-            aria-label="Sort order"
-            value={sortDirection}
-            onChange={(event) => {
-              setSortDirection(event.target.value);
-              setPage(0);
-            }}
-          >
-            <option value="desc">Newest first</option>
-            <option value="asc">Oldest first</option>
           </select>
           {role === "OFFICIAL" && (
             <label>
